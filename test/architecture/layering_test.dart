@@ -36,6 +36,8 @@ void main() {
     'application': <String>{'core', 'domain', 'application'},
     'infrastructure': <String>{'core', 'domain', 'infrastructure'},
     'features': <String>{'core', 'domain', 'application', 'features'},
+    // `features/shared` is the design system, not a feature; the check below
+    // allows a feature to import it and nothing else outside its own folder.
     // Composition is the one place that may see everything.
     'composition': <String>{
       'core',
@@ -127,6 +129,20 @@ void main() {
     expect(violations, isEmpty, reason: violations.join('\n'));
   });
 
+  test('the shared design system holds no feature logic', () {
+    // If `shared` ever imports the application layer it has stopped being a
+    // design system and the exemption above stops being safe.
+    final List<String> violations = <String>[];
+    for (final File file in sources) {
+      final String path = file.path.replaceAll(r'\', '/');
+      if (!path.startsWith('lib/features/shared/')) continue;
+      if (file.readAsStringSync().contains('package:humsukhan/application/')) {
+        violations.add('\$path imports the application layer');
+      }
+    }
+    expect(violations, isEmpty, reason: violations.join('\n'));
+  });
+
   test('a feature never imports another feature', () {
     final RegExp featureImport = RegExp(
       r'''['"]package:humsukhan/features/([^/]+)/''',
@@ -140,8 +156,12 @@ void main() {
       for (final RegExpMatch match in featureImport.allMatches(
         file.readAsStringSync(),
       )) {
-        if (match[1] != own) {
-          violations.add('$path imports feature ${match[1]}');
+        final String target = match[1]!;
+        // `shared` is the design system every screen is built from. It carries
+        // no feature logic — the test above keeps it that way — so importing it
+        // is not one feature reaching into another.
+        if (target != own && target != 'shared') {
+          violations.add('$path imports feature $target');
         }
       }
     }

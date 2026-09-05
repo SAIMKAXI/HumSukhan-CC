@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:humsukhan/application/common/async_state.dart';
+import 'package:humsukhan/application/common/operation_state.dart';
 import 'package:humsukhan/application/professional/insight_service.dart';
 import 'package:humsukhan/core/failure/failure.dart';
 import 'package:humsukhan/core/result/result.dart';
@@ -26,16 +26,16 @@ void main() {
 
   group('B7 — never-requested, in-progress and failed are distinguishable', () {
     test('a fresh service is idle, not empty', () {
-      expect(service.state, isA<AsyncIdle<Insight>>());
+      expect(service.state, isA<OperationIdle<Insight>>());
     });
 
     test('generation moves through loading to success', () async {
       port.delay = const Duration(milliseconds: 20);
       final Future<Result<Insight, InsightFailure>> pending = generate();
 
-      expect(service.state, isA<AsyncLoading<Insight>>());
+      expect(service.state, isA<OperationLoading<Insight>>());
       await pending;
-      expect(service.state, isA<AsyncSuccess<Insight>>());
+      expect(service.state, isA<OperationSuccess<Insight>>());
     });
 
     test(
@@ -45,7 +45,7 @@ void main() {
 
         await generate();
 
-        expect(service.state, isA<AsyncFailure<Insight>>());
+        expect(service.state, isA<OperationFailure<Insight>>());
         expect(service.state.failureOrNull?.code, FailureCode.network);
         expect(service.state.failureOrNull?.remedy, isNotNull);
       },
@@ -73,7 +73,7 @@ void main() {
         final Result<Insight, InsightFailure> result = await generate();
 
         expect(result.isErr, isTrue);
-        expect(service.state, isA<AsyncFailure<Insight>>());
+        expect(service.state, isA<OperationFailure<Insight>>());
       },
     );
 
@@ -92,7 +92,7 @@ void main() {
         await generate();
         expect(
           service.state,
-          isA<AsyncFailure<Insight>>(),
+          isA<OperationFailure<Insight>>(),
           reason: 'no state change for ${failure.code.name}',
         );
       }
@@ -118,13 +118,13 @@ void main() {
     test('a stored insight seeds success without a request', () {
       service.seed(Insight(summary: 'stored', generatedAt: DateTime.utc(2026)));
 
-      expect(service.state, isA<AsyncSuccess<Insight>>());
+      expect(service.state, isA<OperationSuccess<Insight>>());
       expect(port.requests, isEmpty);
     });
 
     test('seeding null returns to idle', () {
       service.seed(null);
-      expect(service.state, isA<AsyncIdle<Insight>>());
+      expect(service.state, isA<OperationIdle<Insight>>());
     });
   });
 

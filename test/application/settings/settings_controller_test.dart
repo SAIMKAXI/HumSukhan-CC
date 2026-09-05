@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:humsukhan/application/common/async_state.dart';
+import 'package:humsukhan/application/common/operation_state.dart';
 import 'package:humsukhan/application/settings/settings_controller.dart';
 import 'package:humsukhan/core/failure/failure.dart';
 import 'package:humsukhan/core/l10n/app_language.dart';
@@ -23,16 +23,16 @@ void main() {
   tearDown(() async => controller.dispose());
 
   test('load moves idle to success', () async {
-    expect(controller.state, isA<AsyncIdle<AppSettings>>());
+    expect(controller.state, isA<OperationIdle<AppSettings>>());
     await controller.load();
-    expect(controller.state, isA<AsyncSuccess<AppSettings>>());
+    expect(controller.state, isA<OperationSuccess<AppSettings>>());
   });
 
   test('a load failure is a failure state, not silent defaults', () async {
     port.failOnLoad = const StorageFailure(FailureCode.storageReadFailed);
     await controller.load();
 
-    expect(controller.state, isA<AsyncFailure<AppSettings>>());
+    expect(controller.state, isA<OperationFailure<AppSettings>>());
     expect(controller.settings, const AppSettings());
   });
 

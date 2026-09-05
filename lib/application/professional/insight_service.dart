@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:humsukhan/application/common/async_state.dart';
+import 'package:humsukhan/application/common/operation_state.dart';
 import 'package:humsukhan/core/failure/failure.dart';
 import 'package:humsukhan/core/result/result.dart';
 import 'package:humsukhan/domain/professional/insight.dart';
@@ -11,34 +11,34 @@ import 'package:humsukhan/domain/speech/language_tag.dart';
 ///
 /// `generateInsights()` once returned early on five distinct failures with no
 /// state change, so failure, in-progress and never-requested all rendered
-/// identically (B7). Every path here ends in [AsyncSuccess] or [AsyncFailure].
+/// identically (B7). Every path here ends in [OperationSuccess] or [OperationFailure].
 final class InsightService {
   /// Creates a service over [port].
   InsightService({required InsightPort port}) : _port = port;
 
   final InsightPort _port;
 
-  final StreamController<AsyncState<Insight>> _states =
-      StreamController<AsyncState<Insight>>.broadcast();
+  final StreamController<OperationState<Insight>> _states =
+      StreamController<OperationState<Insight>>.broadcast();
 
-  AsyncState<Insight> _state = const AsyncIdle<Insight>();
+  OperationState<Insight> _state = const OperationIdle<Insight>();
   int _generation = 0;
   bool _inFlight = false;
   bool _disposed = false;
 
   /// The state right now.
-  AsyncState<Insight> get state => _state;
+  OperationState<Insight> get state => _state;
 
   /// Every change to [state].
-  Stream<AsyncState<Insight>> get states => _states.stream;
+  Stream<OperationState<Insight>> get states => _states.stream;
 
   /// Seeds the state with an insight that was already generated and stored.
   void seed(Insight? insight) {
     if (_disposed) return;
     _emit(
       insight == null
-          ? const AsyncIdle<Insight>()
-          : AsyncSuccess<Insight>(insight),
+          ? const OperationIdle<Insight>()
+          : OperationSuccess<Insight>(insight),
     );
   }
 
@@ -66,14 +66,14 @@ final class InsightService {
         FailureCode.insightTranscriptEmpty,
         isRecoverable: false,
       );
-      _emit(const AsyncFailure<Insight>(empty));
+      _emit(const OperationFailure<Insight>(empty));
       return const Err<Insight, InsightFailure>(empty);
     }
 
     // Guard first, await second.
     _inFlight = true;
     final int generation = ++_generation;
-    _emit(const AsyncLoading<Insight>());
+    _emit(const OperationLoading<Insight>());
 
     final Result<Insight, InsightFailure> result = await _port.summarise(
       transcript: transcript,
@@ -95,14 +95,14 @@ final class InsightService {
             FailureCode.insightGenerationFailed,
             detail: 'model returned nothing usable',
           );
-          _emit(const AsyncFailure<Insight>(unusable));
+          _emit(const OperationFailure<Insight>(unusable));
           return const Err<Insight, InsightFailure>(unusable);
         }
-        _emit(AsyncSuccess<Insight>(insight));
+        _emit(OperationSuccess<Insight>(insight));
         return Ok<Insight, InsightFailure>(insight);
       },
       (InsightFailure failure) {
-        _emit(AsyncFailure<Insight>(failure));
+        _emit(OperationFailure<Insight>(failure));
         return Err<Insight, InsightFailure>(failure);
       },
     );
@@ -113,7 +113,7 @@ final class InsightService {
     if (_disposed) return;
     _generation++;
     _inFlight = false;
-    _emit(const AsyncIdle<Insight>());
+    _emit(const OperationIdle<Insight>());
   }
 
   /// Stops emitting.
@@ -123,7 +123,7 @@ final class InsightService {
     await _states.close();
   }
 
-  void _emit(AsyncState<Insight> next) {
+  void _emit(OperationState<Insight> next) {
     if (_disposed) return;
     _state = next;
     if (!_states.isClosed) _states.add(next);

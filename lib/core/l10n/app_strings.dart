@@ -1160,6 +1160,7 @@ const Map<FailureCode, String> _urduFailureMessages = <FailureCode, String>{
   FailureCode.offline: 'آپ آف لائن ہیں۔',
   FailureCode.network: 'نیٹ ورک کی درخواست ناکام رہی۔',
   FailureCode.timeout: 'درخواست میں بہت دیر لگ گئی۔',
+  FailureCode.backendUnavailable: 'ہم سخن اپنے سرور تک نہیں پہنچ سکا۔',
   FailureCode.microphonePermissionDenied: 'مائیکروفون کی اجازت نہیں دی گئی۔',
   FailureCode.microphonePermissionPermanentlyDenied:
       'اس ایپ کے لیے مائیکروفون بند ہے۔',
@@ -1199,6 +1200,7 @@ const Map<FailureCode, String> _urduFailureRemedies = <FailureCode, String>{
       'وائی فائی یا موبائل ڈیٹا سے جڑیں، پھر دوبارہ کوشش کریں۔',
   FailureCode.network: 'اپنا رابطہ دیکھیں اور دوبارہ کوشش کریں۔',
   FailureCode.timeout: 'دوبارہ کوشش کریں۔',
+  FailureCode.backendUnavailable: 'اپنا رابطہ دیکھ کر دوبارہ کوشش کریں۔ اگر یہ بار بار ہو تو ایپ دوبارہ نصب کریں۔',
   FailureCode.microphonePermissionDenied:
       'جاری رکھنے کے لیے مائیکروفون کی اجازت دیں۔',
   FailureCode.microphonePermissionPermanentlyDenied:

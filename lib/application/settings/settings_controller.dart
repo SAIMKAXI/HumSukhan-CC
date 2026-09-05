@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:humsukhan/application/common/async_state.dart';
+import 'package:humsukhan/application/common/operation_state.dart';
 import 'package:humsukhan/core/failure/failure.dart';
 import 'package:humsukhan/core/l10n/app_language.dart';
 import 'package:humsukhan/core/result/result.dart';
@@ -21,17 +21,17 @@ final class SettingsController {
 
   final SettingsPort _port;
 
-  final StreamController<AsyncState<AppSettings>> _states =
-      StreamController<AsyncState<AppSettings>>.broadcast();
+  final StreamController<OperationState<AppSettings>> _states =
+      StreamController<OperationState<AppSettings>>.broadcast();
 
-  AsyncState<AppSettings> _state = const AsyncIdle<AppSettings>();
+  OperationState<AppSettings> _state = const OperationIdle<AppSettings>();
   bool _disposed = false;
 
   /// The load state right now.
-  AsyncState<AppSettings> get state => _state;
+  OperationState<AppSettings> get state => _state;
 
   /// Every change to [state].
-  Stream<AsyncState<AppSettings>> get states => _states.stream;
+  Stream<OperationState<AppSettings>> get states => _states.stream;
 
   /// The settings in force, falling back to defaults before the load finishes.
   AppSettings get settings => _state.valueOrNull ?? const AppSettings();
@@ -39,11 +39,14 @@ final class SettingsController {
   /// Loads the stored settings.
   Future<void> load() async {
     if (_disposed) return;
-    _emit(const AsyncLoading<AppSettings>());
+    _emit(const OperationLoading<AppSettings>());
     final Result<AppSettings, StorageFailure> result = await _port.load();
     if (_disposed) return;
     _emit(
-      result.fold(AsyncSuccess<AppSettings>.new, AsyncFailure<AppSettings>.new),
+      result.fold(
+        OperationSuccess<AppSettings>.new,
+        OperationFailure<AppSettings>.new,
+      ),
     );
   }
 
@@ -56,7 +59,7 @@ final class SettingsController {
     }
     // Optimistic: the UI reflects the choice immediately, and a write failure
     // surfaces rather than silently reverting.
-    _emit(AsyncSuccess<AppSettings>(next));
+    _emit(OperationSuccess<AppSettings>(next));
     return _port.save(next);
   }
 
@@ -113,7 +116,7 @@ final class SettingsController {
     await _states.close();
   }
 
-  void _emit(AsyncState<AppSettings> next) {
+  void _emit(OperationState<AppSettings> next) {
     if (_disposed) return;
     _state = next;
     if (!_states.isClosed) _states.add(next);

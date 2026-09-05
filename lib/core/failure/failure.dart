@@ -18,6 +18,9 @@ enum FailureCode {
   /// A network call exceeded its deadline.
   timeout,
 
+  /// The app cannot reach its own server at all.
+  backendUnavailable,
+
   // Permissions and hardware.
   /// The user declined the microphone permission.
   microphonePermissionDenied,
@@ -122,6 +125,7 @@ const Map<FailureCode, String> _messages = <FailureCode, String>{
   FailureCode.offline: 'You are offline.',
   FailureCode.network: 'The network request failed.',
   FailureCode.timeout: 'The request took too long.',
+  FailureCode.backendUnavailable: 'HumSukhan cannot reach its server.',
   FailureCode.microphonePermissionDenied: 'Microphone access was declined.',
   FailureCode.microphonePermissionPermanentlyDenied:
       'Microphone access is blocked for this app.',
@@ -161,6 +165,9 @@ const Map<FailureCode, String> _remedies = <FailureCode, String>{
   FailureCode.offline: 'Reconnect to Wi-Fi or mobile data, then try again.',
   FailureCode.network: 'Check your connection and try again.',
   FailureCode.timeout: 'Try again.',
+  FailureCode.backendUnavailable:
+      'Check your connection and try again. If this keeps happening, '
+      'reinstall the app.',
   FailureCode.microphonePermissionDenied:
       'Allow microphone access to continue.',
   FailureCode.microphonePermissionPermanentlyDenied:

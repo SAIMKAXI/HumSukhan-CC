@@ -1,0 +1,376 @@
+import 'dart:async';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:humsukhan/application/account/auth_controller.dart';
+import 'package:humsukhan/application/common/operation_state.dart';
+import 'package:humsukhan/application/conversation/conversation_session.dart';
+import 'package:humsukhan/application/conversation/conversation_session_state.dart';
+import 'package:humsukhan/application/environment/monitoring_controller.dart';
+import 'package:humsukhan/application/professional/insight_service.dart';
+import 'package:humsukhan/application/professional/session_recorder.dart';
+import 'package:humsukhan/application/settings/settings_controller.dart';
+import 'package:humsukhan/core/id/id_generator.dart';
+import 'package:humsukhan/core/l10n/app_language.dart';
+import 'package:humsukhan/core/l10n/app_strings.dart';
+import 'package:humsukhan/core/logging/app_logger.dart';
+import 'package:humsukhan/core/theme/app_theme.dart';
+import 'package:humsukhan/core/time/clock.dart';
+import 'package:humsukhan/domain/account/account.dart';
+import 'package:humsukhan/domain/account/auth_port.dart';
+import 'package:humsukhan/domain/conversation/conversation_repository_port.dart';
+import 'package:humsukhan/domain/environment/alert_presenter_port.dart';
+import 'package:humsukhan/domain/environment/detector_port.dart';
+import 'package:humsukhan/domain/environment/model_state.dart';
+import 'package:humsukhan/domain/environment/sound_event.dart';
+import 'package:humsukhan/domain/professional/insight.dart';
+import 'package:humsukhan/domain/professional/insight_port.dart';
+import 'package:humsukhan/domain/professional/session_repository_port.dart';
+import 'package:humsukhan/domain/settings/app_settings.dart';
+import 'package:humsukhan/domain/settings/settings_port.dart';
+import 'package:humsukhan/domain/speech/capability.dart';
+import 'package:humsukhan/domain/speech/stt_port.dart';
+import 'package:humsukhan/domain/speech/tts_port.dart';
+
+/// The providers the UI watches.
+///
+/// Every *port* here is declared and left unimplemented: binding a port to an
+/// adapter happens once, in `composition/providers.dart`, which is the only
+/// library that imports `infrastructure`. A screen therefore cannot reach an
+/// adapter even by accident, and a widget test can override any of these with a
+/// fake without touching a plugin.
+
+Never _mustOverride(String name) =>
+    throw StateError('$name must be bound in the composition root');
+
+// ---- primitives ---------------------------------------------------------
+
+/// Application logging.
+final Provider<AppLogger> loggerProvider = Provider<AppLogger>(
+  (Ref ref) => const SilentLogger(),
+);
+
+/// The clock everything timestamps against.
+final Provider<Clock> clockProvider = Provider<Clock>(
+  (Ref ref) => const SystemClock(),
+);
+
+/// Identifier generation.
+final Provider<IdGenerator> idGeneratorProvider = Provider<IdGenerator>(
+  (Ref ref) => TimestampIdGenerator(),
+);
+
+// ---- ports --------------------------------------------------------------
+
+/// Accounts and sessions.
+final Provider<AuthPort> authPortProvider = Provider<AuthPort>(
+  (Ref ref) => _mustOverride('authPortProvider'),
+);
+
+/// Session summarisation.
+final Provider<InsightPort> insightPortProvider = Provider<InsightPort>(
+  (Ref ref) => _mustOverride('insightPortProvider'),
+);
+
+/// Where settings are persisted, for the current user.
+final Provider<SettingsPort> settingsPortProvider = Provider<SettingsPort>(
+  (Ref ref) => _mustOverride('settingsPortProvider'),
+);
+
+/// Saved conversations, for the current user.
+final Provider<ConversationRepositoryPort> conversationRepositoryProvider =
+    Provider<ConversationRepositoryPort>(
+      (Ref ref) => _mustOverride('conversationRepositoryProvider'),
+    );
+
+/// Professional sessions, for the current user.
+final Provider<SessionRepositoryPort> sessionRepositoryProvider =
+    Provider<SessionRepositoryPort>(
+      (Ref ref) => _mustOverride('sessionRepositoryProvider'),
+    );
+
+/// The recogniser Everyday mode uses.
+final Provider<SttPort> conversationSttProvider = Provider<SttPort>(
+  (Ref ref) => _mustOverride('conversationSttProvider'),
+);
+
+/// The recogniser Professional mode uses. Separate, so a live conversation and
+/// a live recording never share one transport.
+final Provider<SttPort> recorderSttProvider = Provider<SttPort>(
+  (Ref ref) => _mustOverride('recorderSttProvider'),
+);
+
+/// Speech synthesis.
+final Provider<TtsPort> ttsPortProvider = Provider<TtsPort>(
+  (Ref ref) => _mustOverride('ttsPortProvider'),
+);
+
+/// What this device can recognise and speak.
+final Provider<SpeechCapabilityPort> capabilityProvider =
+    Provider<SpeechCapabilityPort>(
+      (Ref ref) => _mustOverride('capabilityProvider'),
+    );
+
+/// On-device sound detection.
+final Provider<SoundDetectorPort> detectorProvider =
+    Provider<SoundDetectorPort>((Ref ref) => _mustOverride('detectorProvider'));
+
+/// The on-device sound model.
+final Provider<ModelRepositoryPort> modelRepositoryProvider =
+    Provider<ModelRepositoryPort>(
+      (Ref ref) => _mustOverride('modelRepositoryProvider'),
+    );
+
+/// How alerts reach the user.
+final Provider<AlertPresenterPort> alertPresenterProvider =
+    Provider<AlertPresenterPort>(
+      (Ref ref) => _mustOverride('alertPresenterProvider'),
+    );
+
+/// A screen-level sink for visual alerts, filled by the alert presenter.
+final Provider<StreamController<SoundEvent>> visualAlertsProvider =
+    Provider<StreamController<SoundEvent>>((Ref ref) {
+      // ignore: close_sinks — closed by the ref.onDispose immediately below.
+      final StreamController<SoundEvent> controller =
+          StreamController<SoundEvent>.broadcast();
+      ref.onDispose(controller.close);
+      return controller;
+    });
+
+// ---- account ------------------------------------------------------------
+
+/// The signed-in account and the gate's phase.
+final NotifierProvider<AuthNotifier, AuthState> authControllerProvider =
+    NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
+
+/// Mirrors [AuthController] into Riverpod.
+final class AuthNotifier extends Notifier<AuthState> {
+  AuthController? _controller;
+
+  /// The controller, for commands.
+  AuthController get controller => _controller!;
+
+  @override
+  AuthState build() {
+    final AuthController controller = AuthController(
+      port: ref.watch(authPortProvider),
+      logger: ref.watch(loggerProvider),
+    );
+    _controller = controller;
+    final StreamSubscription<AuthState> subscription = controller.states.listen(
+      (AuthState next) => state = next,
+    );
+    ref.onDispose(() {
+      unawaited(subscription.cancel());
+      unawaited(controller.dispose());
+    });
+    unawaited(controller.initialise());
+    return controller.state;
+  }
+}
+
+/// Who is signed in, if anyone.
+final Provider<Account?> accountProvider = Provider<Account?>(
+  (Ref ref) => ref.watch(authControllerProvider).account,
+);
+
+// ---- settings -----------------------------------------------------------
+
+/// The user's choices, as an idle/loading/success/failure state.
+final NotifierProvider<SettingsNotifier, OperationState<AppSettings>>
+settingsControllerProvider =
+    NotifierProvider<SettingsNotifier, OperationState<AppSettings>>(
+      SettingsNotifier.new,
+    );
+
+/// Mirrors [SettingsController] into Riverpod.
+final class SettingsNotifier extends Notifier<OperationState<AppSettings>> {
+  SettingsController? _controller;
+
+  /// The controller, for commands.
+  SettingsController get controller => _controller!;
+
+  @override
+  OperationState<AppSettings> build() {
+    final SettingsController controller = SettingsController(
+      port: ref.watch(settingsPortProvider),
+    );
+    _controller = controller;
+    final StreamSubscription<OperationState<AppSettings>> subscription =
+        controller.states.listen(
+          (OperationState<AppSettings> next) => state = next,
+        );
+    ref.onDispose(() {
+      unawaited(subscription.cancel());
+      unawaited(controller.dispose());
+    });
+    unawaited(controller.load());
+    return controller.state;
+  }
+}
+
+/// The settings in force, with defaults until the load finishes.
+final Provider<AppSettings> settingsProvider = Provider<AppSettings>(
+  (Ref ref) =>
+      ref.watch(settingsControllerProvider).valueOrNull ?? const AppSettings(),
+);
+
+/// The interface language.
+final Provider<AppLanguage> appLanguageProvider = Provider<AppLanguage>(
+  (Ref ref) => ref.watch(settingsProvider).appLanguage,
+);
+
+/// Localised copy for the current language.
+final Provider<AppStrings> stringsProvider = Provider<AppStrings>(
+  (Ref ref) => AppStrings.of(ref.watch(appLanguageProvider)),
+);
+
+/// Which of the three themes is in force.
+final Provider<AppThemeVariant> themeVariantProvider =
+    Provider<AppThemeVariant>((Ref ref) {
+      final AppSettings settings = ref.watch(settingsProvider);
+      // High contrast is its own theme and wins over dark mode; it is not a
+      // filter layered over another palette.
+      if (settings.highContrast) return AppThemeVariant.highContrast;
+      return settings.darkMode ? AppThemeVariant.dark : AppThemeVariant.light;
+    });
+
+// ---- conversation -------------------------------------------------------
+
+/// The Everyday session.
+final NotifierProvider<ConversationNotifier, ConversationSessionState>
+conversationProvider =
+    NotifierProvider<ConversationNotifier, ConversationSessionState>(
+      ConversationNotifier.new,
+    );
+
+/// Mirrors [ConversationSession] into Riverpod.
+final class ConversationNotifier extends Notifier<ConversationSessionState> {
+  ConversationSession? _session;
+
+  /// The session, for commands.
+  ConversationSession get session => _session!;
+
+  @override
+  ConversationSessionState build() {
+    final AppSettings settings = ref.watch(settingsProvider);
+    final ConversationSession session = ConversationSession(
+      stt: ref.watch(conversationSttProvider),
+      tts: ref.watch(ttsPortProvider),
+      ids: ref.watch(idGeneratorProvider),
+      clock: ref.watch(clockProvider),
+      captionLanguage: settings.captionLanguage,
+      threshold: settings.pauseThreshold,
+      logger: ref.watch(loggerProvider),
+    )..bindTtsActivity();
+    _session = session;
+
+    final StreamSubscription<ConversationSessionState> subscription = session
+        .states
+        .listen((ConversationSessionState next) => state = next);
+    ref.onDispose(() {
+      unawaited(subscription.cancel());
+      unawaited(session.dispose());
+    });
+    return session.state;
+  }
+}
+
+// ---- professional -------------------------------------------------------
+
+/// The live Professional recording.
+final NotifierProvider<RecorderNotifier, RecorderState> recorderProvider =
+    NotifierProvider<RecorderNotifier, RecorderState>(RecorderNotifier.new);
+
+/// Mirrors [SessionRecorder] into Riverpod.
+final class RecorderNotifier extends Notifier<RecorderState> {
+  SessionRecorder? _recorder;
+
+  /// The recorder, for commands.
+  SessionRecorder get recorder => _recorder!;
+
+  @override
+  RecorderState build() {
+    final SessionRecorder recorder = SessionRecorder(
+      stt: ref.watch(recorderSttProvider),
+      ids: ref.watch(idGeneratorProvider),
+      clock: ref.watch(clockProvider),
+      logger: ref.watch(loggerProvider),
+    );
+    _recorder = recorder;
+    final StreamSubscription<RecorderState> subscription = recorder.states
+        .listen((RecorderState next) => state = next);
+    ref.onDispose(() {
+      unawaited(subscription.cancel());
+      unawaited(recorder.dispose());
+    });
+    return recorder.state;
+  }
+}
+
+/// Summarisation state for the session on screen.
+final NotifierProvider<InsightNotifier, OperationState<Insight>>
+insightServiceProvider =
+    NotifierProvider<InsightNotifier, OperationState<Insight>>(
+      InsightNotifier.new,
+    );
+
+/// Mirrors [InsightService] into Riverpod.
+final class InsightNotifier extends Notifier<OperationState<Insight>> {
+  InsightService? _service;
+
+  /// The service, for commands.
+  InsightService get service => _service!;
+
+  @override
+  OperationState<Insight> build() {
+    final InsightService service = InsightService(
+      port: ref.watch(insightPortProvider),
+    );
+    _service = service;
+    final StreamSubscription<OperationState<Insight>> subscription = service
+        .states
+        .listen((OperationState<Insight> next) => state = next);
+    ref.onDispose(() {
+      unawaited(subscription.cancel());
+      unawaited(service.dispose());
+    });
+    return service.state;
+  }
+}
+
+// ---- environment --------------------------------------------------------
+
+/// Environmental monitoring.
+final NotifierProvider<MonitoringNotifier, MonitoringState> monitoringProvider =
+    NotifierProvider<MonitoringNotifier, MonitoringState>(
+      MonitoringNotifier.new,
+    );
+
+/// Mirrors [MonitoringController] into Riverpod.
+final class MonitoringNotifier extends Notifier<MonitoringState> {
+  MonitoringController? _controller;
+
+  /// The controller, for commands.
+  MonitoringController get controller => _controller!;
+
+  @override
+  MonitoringState build() {
+    final MonitoringController controller = MonitoringController(
+      detector: ref.watch(detectorProvider),
+      models: ref.watch(modelRepositoryProvider),
+      presenter: ref.watch(alertPresenterProvider),
+      ids: ref.watch(idGeneratorProvider),
+      clock: ref.watch(clockProvider),
+      logger: ref.watch(loggerProvider),
+    )..setChannels(ref.watch(settingsProvider).alertChannels);
+    _controller = controller;
+
+    final StreamSubscription<MonitoringState> subscription = controller.states
+        .listen((MonitoringState next) => state = next);
+    ref.onDispose(() {
+      unawaited(subscription.cancel());
+      unawaited(controller.dispose());
+    });
+    return controller.state;
+  }
+}
