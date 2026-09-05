@@ -16,6 +16,11 @@ analyzer:
     discarded_futures: ignore
     # An empty catch is how failures became invisible (B8).
     empty_catches: error
+    # Private final fields are initialised from named constructor parameters
+    # throughout the application layer. Dart forbids a named parameter that
+    # starts with an underscore, so the suggested initialising formal does not
+    # compile; the lint has no correct fix here.
+    prefer_initializing_formals: ignore
   exclude:
     - build/**
     - "**/*.g.dart"
