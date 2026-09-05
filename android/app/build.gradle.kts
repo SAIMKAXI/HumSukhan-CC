@@ -15,11 +15,12 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "pk.humsukhan.humsukhan"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // flutter_foreground_task with a typed microphone service and the
+        // sherpa-onnx native libraries both need a modern floor.
+        minSdk = maxOf(flutter.minSdkVersion, 24)
         targetSdk = flutter.targetSdkVersion
         // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
         // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)
@@ -29,11 +30,33 @@ android {
         versionName = flutter.versionName
     }
 
+    // Release signing comes from android/key.properties when it exists, which
+    // CI writes from secrets. Without it the release build falls back to the
+    // debug key so `flutter run --release` still works locally, and the release
+    // workflow fails loudly rather than shipping a debug-signed APK.
+    signingConfigs {
+        create("release") {
+            val properties = java.util.Properties()
+            val file = rootProject.file("key.properties")
+            if (file.exists()) {
+                file.inputStream().use { properties.load(it) }
+                storeFile = properties.getProperty("storeFile")?.let { file(it) }
+                storePassword = properties.getProperty("storePassword")
+                keyAlias = properties.getProperty("keyAlias")
+                keyPassword = properties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (rootProject.file("key.properties").exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }

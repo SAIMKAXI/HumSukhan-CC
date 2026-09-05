@@ -18,6 +18,8 @@ import 'package:humsukhan/infrastructure/backend/edge_insight_adapter.dart';
 import 'package:humsukhan/infrastructure/backend/supabase_auth_adapter.dart';
 import 'package:humsukhan/infrastructure/backend/supabase_gateway.dart';
 import 'package:humsukhan/infrastructure/environment/alert_presenter.dart';
+import 'package:humsukhan/infrastructure/environment/monitoring_service.dart';
+import 'package:humsukhan/infrastructure/environment/quick_tile_channel.dart';
 import 'package:humsukhan/infrastructure/environment/sherpa_sound_detector.dart';
 import 'package:humsukhan/infrastructure/model/model_repository.dart';
 import 'package:humsukhan/infrastructure/storage/key_value_store.dart';
@@ -289,6 +291,19 @@ class HumSukhanScope extends StatelessWidget {
         );
         ref.onDispose(detector.dispose);
         return detector;
+      }),
+
+      monitoringServiceProvider.overrideWith(
+        (Ref ref) =>
+            ForegroundMonitoringService(logger: ref.watch(loggerProvider)),
+      ),
+
+      quickTileProvider.overrideWith((Ref ref) {
+        final QuickTileChannel channel = QuickTileChannel(
+          logger: ref.watch(loggerProvider),
+        );
+        ref.onDispose(channel.dispose);
+        return channel;
       }),
 
       alertPresenterProvider.overrideWith((Ref ref) {

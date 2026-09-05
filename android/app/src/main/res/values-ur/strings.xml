@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ہم سخن</string>
+    <string name="monitoring_tile_label">آوازوں کی اطلاع</string>
+    <string name="monitoring_channel_name">آوازوں کی نگرانی</string>
+    <string name="monitoring_channel_description">ظاہر کرتا ہے کہ ہم سخن اہم آوازوں پر نظر رکھے ہوئے ہے۔</string>
+    <string name="monitoring_notification_title">اہم آوازوں پر نظر ہے</string>
+    <string name="monitoring_notification_text">دروازے کی گھنٹی، سائرن، الارم اور مزید۔ آواز اسی ڈیوائس پر رہتی ہے۔</string>
+</resources>

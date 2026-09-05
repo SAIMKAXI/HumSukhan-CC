@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:humsukhan/application/providers.dart';
+import 'package:humsukhan/application/environment/monitoring_controller.dart';
 import 'package:humsukhan/core/l10n/app_strings.dart';
+import 'package:humsukhan/core/logging/app_logger.dart';
 import 'package:humsukhan/composition/shell/alert_overlay.dart';
 import 'package:humsukhan/features/conversation/conversation_screen.dart';
 import 'package:humsukhan/features/environment/environment_screen.dart';
@@ -23,6 +27,69 @@ class MainScaffold extends ConsumerStatefulWidget {
 
 class _MainScaffoldState extends ConsumerState<MainScaffold> {
   int _index = 0;
+  StreamSubscription<void>? _tileRequests;
+
+  @override
+  void initState() {
+    super.initState();
+    // The Quick Settings tile hands its request here rather than touching the
+    // microphone itself, so there is one owner of monitoring and one place that
+    // can explain a failure to start.
+    unawaited(_consumeTileRequest());
+    _tileRequests = ref
+        .read(quickTileProvider)
+        .requests
+        .listen(
+          (void _) => unawaited(_handleTileRequest()),
+          onError: (Object error, StackTrace stackTrace) => ref
+              .read(loggerProvider)
+              .log(
+                LogLevel.warning,
+                'tile',
+                'tile request stream error',
+                error: error,
+                stackTrace: stackTrace,
+              ),
+        );
+  }
+
+  @override
+  void dispose() {
+    unawaited(_tileRequests?.cancel());
+    super.dispose();
+  }
+
+  Future<void> _consumeTileRequest() async {
+    final bool requested = await ref
+        .read(quickTileProvider)
+        .consumePendingRequest();
+    if (!requested) return;
+    await _handleTileRequest();
+  }
+
+  Future<void> _handleTileRequest() async {
+    // Liveness check before touching state.
+    if (!mounted) return;
+    _select(MainTab.alerts);
+    final bool running = ref.read(monitoringProvider).isRunning;
+    final AppStrings strings = ref.read(stringsProvider);
+    final MonitoringController controller = ref
+        .read(monitoringProvider.notifier)
+        .controller;
+    if (running) {
+      await controller.stop();
+    } else {
+      await controller.start(
+        notificationTitle: strings(StringKey.envNotificationTitle),
+        notificationBody: strings(StringKey.envNotificationBody),
+      );
+    }
+    if (!mounted) return;
+    await ref
+        .read(settingsControllerProvider.notifier)
+        .controller
+        .setMonitoringEnabled(!running);
+  }
 
   void _select(int index) => setState(() => _index = index);
 

@@ -9,6 +9,7 @@ import 'package:humsukhan/domain/environment/alert_presenter_port.dart';
 import 'package:humsukhan/domain/environment/detection_policy.dart';
 import 'package:humsukhan/domain/environment/detector_port.dart';
 import 'package:humsukhan/domain/environment/model_state.dart';
+import 'package:humsukhan/domain/environment/monitoring_service_port.dart';
 import 'package:humsukhan/domain/environment/sound_event.dart';
 import 'package:humsukhan/domain/settings/app_settings.dart';
 
@@ -80,6 +81,7 @@ final class MonitoringController {
     required ModelRepositoryPort models,
     required AlertPresenterPort presenter,
     required IdGenerator ids,
+    MonitoringServicePort? service,
     required Clock clock,
     DetectionPolicy policy = const DetectionPolicy(),
     AppLogger logger = const SilentLogger(),
@@ -88,6 +90,7 @@ final class MonitoringController {
        _models = models,
        _presenter = presenter,
        _ids = ids,
+       _service = service,
        _clock = clock,
        _policy = policy,
        _logger = logger,
@@ -96,6 +99,7 @@ final class MonitoringController {
   final SoundDetectorPort _detector;
   final ModelRepositoryPort _models;
   final AlertPresenterPort _presenter;
+  final MonitoringServicePort? _service;
   final IdGenerator _ids;
   final Clock _clock;
   final DetectionPolicy _policy;
@@ -131,7 +135,14 @@ final class MonitoringController {
   ///
   /// Ensures the model is genuinely loadable first — "ready" means loaded, not
   /// present (B6) — and reports exactly why it could not start otherwise.
-  Future<Result<Unit, Failure>> start() async {
+  ///
+  /// [notificationTitle] and [notificationBody] are the localised copy for the
+  /// foreground-service notification, which Android requires before a
+  /// backgrounded app may hold the microphone.
+  Future<Result<Unit, Failure>> start({
+    String notificationTitle = 'Listening for important sounds',
+    String notificationBody = 'Audio stays on this device.',
+  }) async {
     if (_disposed) {
       return const Err<Unit, Failure>(
         DetectorFailure(FailureCode.cancelled, isRecoverable: false),
@@ -146,12 +157,20 @@ final class MonitoringController {
     final int generation = ++_generation;
     _emit(_state.copyWith(phase: MonitoringPhase.starting, clearFailure: true));
 
-    final Result<Unit, Failure> outcome = await _startInternal(generation);
+    final Result<Unit, Failure> outcome = await _startInternal(
+      generation,
+      notificationTitle,
+      notificationBody,
+    );
     if (generation == _generation) _startInFlight = false;
     return outcome;
   }
 
-  Future<Result<Unit, Failure>> _startInternal(int generation) async {
+  Future<Result<Unit, Failure>> _startInternal(
+    int generation,
+    String notificationTitle,
+    String notificationBody,
+  ) async {
     _modelStates ??= _models.state.listen(
       (ModelState model) {
         if (_disposed) return;
@@ -178,6 +197,24 @@ final class MonitoringController {
       const ModelFailure notReady = ModelFailure(FailureCode.modelAbsent);
       _fail(notReady);
       return const Err<Unit, Failure>(notReady);
+    }
+
+    // The service comes up before the microphone: without it Android silences
+    // capture the moment the app is backgrounded, and the user would believe
+    // they were still protected.
+    final MonitoringServicePort? service = _service;
+    if (service != null) {
+      final Result<Unit, DetectorFailure> started = await service.start(
+        title: notificationTitle,
+        body: notificationBody,
+      );
+      if (_superseded(generation)) return const Ok<Unit, Failure>(unit);
+      if (started case Err<Unit, DetectorFailure>(
+        :final DetectorFailure error,
+      )) {
+        _fail(error);
+        return Err<Unit, Failure>(error);
+      }
     }
 
     await _observations?.cancel();
@@ -221,6 +258,7 @@ final class MonitoringController {
     _generation++;
     _startInFlight = false;
     await _detector.stop();
+    await _service?.stop();
     if (_disposed) return;
     _emit(_state.copyWith(phase: MonitoringPhase.off, clearFailure: true));
   }

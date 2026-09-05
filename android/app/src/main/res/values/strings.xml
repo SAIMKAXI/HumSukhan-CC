@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">HumSukhan</string>
+    <string name="monitoring_tile_label">Sound alerts</string>
+    <string name="monitoring_channel_name">Sound monitoring</string>
+    <string name="monitoring_channel_description">Shows that HumSukhan is listening for important sounds.</string>
+    <string name="monitoring_notification_title">Listening for important sounds</string>
+    <string name="monitoring_notification_text">Doorbell, siren, alarm and more. Audio stays on this device.</string>
+</resources>

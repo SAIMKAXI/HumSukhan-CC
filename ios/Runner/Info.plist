@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Humsukhan</string>
+	<string>HumSukhan</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -65,6 +65,21 @@
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>HumSukhan uses the microphone to caption what people say to you, to record meetings and lectures, and to recognise important sounds. Sound recognition happens entirely on this device.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>HumSukhan turns speech into captions you can read.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>HumSukhan can flash the camera light to alert you to an important sound.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>ur</string>
 	</array>
 </dict>
 </plist>

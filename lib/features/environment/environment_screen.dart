@@ -4,9 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:humsukhan/application/environment/monitoring_controller.dart';
 import 'package:humsukhan/application/providers.dart';
-import 'package:humsukhan/core/failure/failure.dart';
 import 'package:humsukhan/core/l10n/app_strings.dart';
-import 'package:humsukhan/core/result/result.dart';
 import 'package:humsukhan/core/theme/app_tokens.dart';
 import 'package:humsukhan/domain/environment/model_state.dart';
 import 'package:humsukhan/domain/environment/sound_event.dart';
@@ -18,7 +16,12 @@ class EnvironmentScreen extends ConsumerWidget {
   /// Creates the screen.
   const EnvironmentScreen({super.key});
 
-  Future<void> _toggle(WidgetRef ref, bool on) async {
+  /// Toggles monitoring, persisting the choice so it survives a restart and so
+  /// the Quick Settings tile can show the same state.
+  static Future<void> toggle(WidgetRef ref, {required bool on}) =>
+      _toggle(ref, on);
+
+  static Future<void> _toggle(WidgetRef ref, bool on) async {
     final MonitoringController controller = ref
         .read(monitoringProvider.notifier)
         .controller;
@@ -27,9 +30,12 @@ class EnvironmentScreen extends ConsumerWidget {
         .controller
         .setMonitoringEnabled(on);
     if (on) {
-      final Result<Unit, Failure> result = await controller.start();
-      // The failure is already rendered in the banner; nothing is swallowed.
-      result.errorOrNull;
+      final AppStrings strings = ref.read(stringsProvider);
+      // The failure is rendered by the banner below; nothing is swallowed.
+      await controller.start(
+        notificationTitle: strings(StringKey.envNotificationTitle),
+        notificationBody: strings(StringKey.envNotificationBody),
+      );
     } else {
       await controller.stop();
     }

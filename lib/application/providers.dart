@@ -21,6 +21,8 @@ import 'package:humsukhan/domain/conversation/conversation_repository_port.dart'
 import 'package:humsukhan/domain/environment/alert_presenter_port.dart';
 import 'package:humsukhan/domain/environment/detector_port.dart';
 import 'package:humsukhan/domain/environment/model_state.dart';
+import 'package:humsukhan/domain/environment/monitoring_service_port.dart';
+import 'package:humsukhan/domain/environment/quick_tile_port.dart';
 import 'package:humsukhan/domain/environment/sound_event.dart';
 import 'package:humsukhan/domain/professional/insight.dart';
 import 'package:humsukhan/domain/professional/insight_port.dart';
@@ -119,6 +121,17 @@ final Provider<ModelRepositoryPort> modelRepositoryProvider =
     Provider<ModelRepositoryPort>(
       (Ref ref) => _mustOverride('modelRepositoryProvider'),
     );
+
+/// Keeps the process alive while monitoring runs.
+final Provider<MonitoringServicePort> monitoringServiceProvider =
+    Provider<MonitoringServicePort>(
+      (Ref ref) => _mustOverride('monitoringServiceProvider'),
+    );
+
+/// The Quick Settings tile.
+final Provider<QuickTilePort> quickTileProvider = Provider<QuickTilePort>(
+  (Ref ref) => _mustOverride('quickTileProvider'),
+);
 
 /// How alerts reach the user.
 final Provider<AlertPresenterPort> alertPresenterProvider =
