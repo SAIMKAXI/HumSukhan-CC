@@ -45,10 +45,7 @@ abstract final class AppTheme {
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-          side: BorderSide(
-            color: scheme.outline,
-            width: contrast ? 2 : 1,
-          ),
+          side: BorderSide(color: scheme.outline, width: contrast ? 2 : 1),
         ),
       ),
       appBarTheme: AppBarTheme(
@@ -103,13 +100,19 @@ abstract final class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          minimumSize: const Size(AppTokens.minHitTarget, AppTokens.minHitTarget),
+          minimumSize: const Size(
+            AppTokens.minHitTarget,
+            AppTokens.minHitTarget,
+          ),
           textStyle: text.labelLarge,
         ),
       ),
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(
-          minimumSize: const Size(AppTokens.minHitTarget, AppTokens.minHitTarget),
+          minimumSize: const Size(
+            AppTokens.minHitTarget,
+            AppTokens.minHitTarget,
+          ),
         ),
       ),
       chipTheme: ChipThemeData(
@@ -133,11 +136,17 @@ abstract final class AppTheme {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-          borderSide: BorderSide(color: scheme.outline, width: contrast ? 2 : 1),
+          borderSide: BorderSide(
+            color: scheme.outline,
+            width: contrast ? 2 : 1,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-          borderSide: BorderSide(color: scheme.outline, width: contrast ? 2 : 1),
+          borderSide: BorderSide(
+            color: scheme.outline,
+            width: contrast ? 2 : 1,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppTokens.radiusSm),
@@ -148,13 +157,18 @@ abstract final class AppTheme {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-          borderSide: BorderSide(color: scheme.error, width: contrast ? 2.5 : 2),
+          borderSide: BorderSide(
+            color: scheme.error,
+            width: contrast ? 2.5 : 2,
+          ),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: scheme.inverseSurface,
-        contentTextStyle: text.bodyMedium?.copyWith(color: scheme.onInverseSurface),
+        contentTextStyle: text.bodyMedium?.copyWith(
+          color: scheme.onInverseSurface,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTokens.radiusSm),
         ),
@@ -168,7 +182,8 @@ abstract final class AppTheme {
       switchTheme: SwitchThemeData(
         thumbColor: contrast
             ? WidgetStateProperty.resolveWith<Color>(
-                (Set<WidgetState> states) => states.contains(WidgetState.selected)
+                (Set<WidgetState> states) =>
+                    states.contains(WidgetState.selected)
                     ? scheme.onPrimary
                     : scheme.onSurface,
               )
@@ -289,18 +304,42 @@ abstract final class AppTheme {
 
     return TextTheme(
       displayLarge: style(AppTokens.display, FontWeight.w700, scheme.onSurface),
-      displayMedium: style(AppTokens.headline, FontWeight.w700, scheme.onSurface),
-      headlineLarge: style(AppTokens.headline, FontWeight.w600, scheme.onSurface),
-      headlineMedium: style(AppTokens.title + 4, FontWeight.w600, scheme.onSurface),
+      displayMedium: style(
+        AppTokens.headline,
+        FontWeight.w700,
+        scheme.onSurface,
+      ),
+      headlineLarge: style(
+        AppTokens.headline,
+        FontWeight.w600,
+        scheme.onSurface,
+      ),
+      headlineMedium: style(
+        AppTokens.title + 4,
+        FontWeight.w600,
+        scheme.onSurface,
+      ),
       titleLarge: style(AppTokens.title, FontWeight.w600, scheme.onSurface),
-      titleMedium: style(AppTokens.bodyLarge, FontWeight.w600, scheme.onSurface),
+      titleMedium: style(
+        AppTokens.bodyLarge,
+        FontWeight.w600,
+        scheme.onSurface,
+      ),
       titleSmall: style(AppTokens.body, FontWeight.w600, scheme.onSurface),
       bodyLarge: style(AppTokens.bodyLarge, FontWeight.w400, scheme.onSurface),
       bodyMedium: style(AppTokens.body, FontWeight.w400, scheme.onSurface),
-      bodySmall: style(AppTokens.caption, FontWeight.w400, scheme.onSurfaceVariant),
+      bodySmall: style(
+        AppTokens.caption,
+        FontWeight.w400,
+        scheme.onSurfaceVariant,
+      ),
       labelLarge: style(AppTokens.body, FontWeight.w600, scheme.onSurface),
       labelMedium: style(AppTokens.caption, FontWeight.w500, scheme.onSurface),
-      labelSmall: style(AppTokens.captionSmall, FontWeight.w500, scheme.onSurfaceVariant),
+      labelSmall: style(
+        AppTokens.captionSmall,
+        FontWeight.w500,
+        scheme.onSurfaceVariant,
+      ),
     );
   }
 }

@@ -28,8 +28,8 @@ enum PauseThreshold {
   bool get commitsOnSilence => duration != null;
 
   /// Parses a stored name, defaulting to [PauseThreshold.natural].
-  static PauseThreshold fromName(String? name) => PauseThreshold.values
-      .firstWhere(
+  static PauseThreshold fromName(String? name) =>
+      PauseThreshold.values.firstWhere(
         (PauseThreshold t) => t.name == name,
         orElse: () => PauseThreshold.natural,
       );
@@ -189,8 +189,7 @@ final class TurnDecision {
   bool get commits => commit != null;
 
   @override
-  String toString() =>
-      'TurnDecision(commit: $commit, close: $closeMicrophone)';
+  String toString() => 'TurnDecision(commit: $commit, close: $closeMicrophone)';
 }
 
 /// The whole of turn segmentation.
@@ -200,11 +199,7 @@ TurnDecision decideTurn(TurnState state, TurnSignal signal) {
   switch (signal) {
     case TurnStarted():
       return TurnDecision(
-        state: state.copyWith(
-          pendingFinal: '',
-          partial: '',
-          isOpen: true,
-        ),
+        state: state.copyWith(pendingFinal: '', partial: '', isOpen: true),
         restartSilenceTimer: state.threshold.commitsOnSilence,
       );
 

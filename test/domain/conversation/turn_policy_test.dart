@@ -54,8 +54,10 @@ void main() {
         isOpen: true,
       );
 
-      final TurnDecision decision =
-          decideTurn(state, const PartialReceived('hello'));
+      final TurnDecision decision = decideTurn(
+        state,
+        const PartialReceived('hello'),
+      );
 
       expect(decision.restartSilenceTimer, isFalse);
     });
@@ -65,10 +67,14 @@ void main() {
     test('a second final is appended to the first', () {
       const TurnState state = TurnState(isOpen: true);
 
-      final TurnDecision first =
-          decideTurn(state, const FinalReceived('where is'));
-      final TurnDecision second =
-          decideTurn(first.state, const FinalReceived('the meeting room'));
+      final TurnDecision first = decideTurn(
+        state,
+        const FinalReceived('where is'),
+      );
+      final TurnDecision second = decideTurn(
+        first.state,
+        const FinalReceived('the meeting room'),
+      );
 
       expect(second.state.pendingFinal, 'where is the meeting room');
     });
@@ -82,10 +88,15 @@ void main() {
     });
 
     test('a partial after a final does not erase the final', () {
-      const TurnState state = TurnState(pendingFinal: 'first sentence', isOpen: true);
+      const TurnState state = TurnState(
+        pendingFinal: 'first sentence',
+        isOpen: true,
+      );
 
-      final TurnDecision decision =
-          decideTurn(state, const PartialReceived('second'));
+      final TurnDecision decision = decideTurn(
+        state,
+        const PartialReceived('second'),
+      );
 
       expect(decision.state.pendingFinal, 'first sentence');
       expect(decision.state.draft, 'first sentence second');
@@ -107,7 +118,10 @@ void main() {
     test('an empty final is ignored rather than committed', () {
       const TurnState state = TurnState(pendingFinal: 'kept', isOpen: true);
 
-      final TurnDecision decision = decideTurn(state, const FinalReceived('   '));
+      final TurnDecision decision = decideTurn(
+        state,
+        const FinalReceived('   '),
+      );
 
       expect(decision.state.pendingFinal, 'kept');
     });
@@ -161,7 +175,10 @@ void main() {
 
   group('manual commit', () {
     test('commits the draft and keeps listening', () {
-      const TurnState state = TurnState(partial: 'said something', isOpen: true);
+      const TurnState state = TurnState(
+        partial: 'said something',
+        isOpen: true,
+      );
 
       final TurnDecision decision = decideTurn(state, const UserCommitted());
 
@@ -179,8 +196,14 @@ void main() {
   group('PauseThreshold', () {
     test('durations match the values offered in the UI', () {
       expect(PauseThreshold.short.duration, const Duration(milliseconds: 1200));
-      expect(PauseThreshold.natural.duration, const Duration(milliseconds: 1700));
-      expect(PauseThreshold.patient.duration, const Duration(milliseconds: 2500));
+      expect(
+        PauseThreshold.natural.duration,
+        const Duration(milliseconds: 1700),
+      );
+      expect(
+        PauseThreshold.patient.duration,
+        const Duration(milliseconds: 2500),
+      );
       expect(PauseThreshold.manual.duration, isNull);
     });
 

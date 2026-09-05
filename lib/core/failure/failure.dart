@@ -161,7 +161,8 @@ const Map<FailureCode, String> _remedies = <FailureCode, String>{
   FailureCode.offline: 'Reconnect to Wi-Fi or mobile data, then try again.',
   FailureCode.network: 'Check your connection and try again.',
   FailureCode.timeout: 'Try again.',
-  FailureCode.microphonePermissionDenied: 'Allow microphone access to continue.',
+  FailureCode.microphonePermissionDenied:
+      'Allow microphone access to continue.',
   FailureCode.microphonePermissionPermanentlyDenied:
       'Open system settings and allow the microphone for HumSukhan.',
   FailureCode.microphoneUnavailable:
@@ -177,7 +178,8 @@ const Map<FailureCode, String> _remedies = <FailureCode, String>{
   FailureCode.ttsVoiceMissing:
       'Install this language in your system speech settings, then try again.',
   FailureCode.ttsFailed: 'Try again.',
-  FailureCode.authInvalidCredentials: 'Check the email and password, or reset it.',
+  FailureCode.authInvalidCredentials:
+      'Check the email and password, or reset it.',
   FailureCode.authEmailInUse: 'Sign in instead, or reset the password.',
   FailureCode.authWeakPassword: 'Use at least 8 characters.',
   FailureCode.authInvalidEmail: 'Enter an address like name@example.com.',
@@ -192,7 +194,8 @@ const Map<FailureCode, String> _remedies = <FailureCode, String>{
   FailureCode.modelLoadFailed: 'Download it again from Settings.',
   FailureCode.modelDownloadFailed: 'Check your connection and try again.',
   FailureCode.detectorStartFailed: 'Turn monitoring off and on again.',
-  FailureCode.serviceStartFailed: 'Allow notifications, then turn monitoring on.',
+  FailureCode.serviceStartFailed:
+      'Allow notifications, then turn monitoring on.',
 };
 
 /// Base of every failure in the app.

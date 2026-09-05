@@ -43,7 +43,10 @@ void main() {
 
   group('Devanagari', () {
     test('is never classified as Urdu', () {
-      expect(LanguagePolicy.classify('मीटिंग कहाँ है'), CaptionLanguage.undetermined);
+      expect(
+        LanguagePolicy.classify('मीटिंग कहाँ है'),
+        CaptionLanguage.undetermined,
+      );
     });
 
     test('is stripped before display', () {
@@ -80,8 +83,9 @@ void main() {
     });
 
     test('unknown words are transliterated rather than dropped', () {
-      final String out =
-          LanguagePolicy.normaliseRomanUrduToScript('mujhe darwaza kholna hai');
+      final String out = LanguagePolicy.normaliseRomanUrduToScript(
+        'mujhe darwaza kholna hai',
+      );
       expect(LanguagePolicy.hasLatinScript(out), isFalse);
       expect(out, contains('مجھے'));
     });
@@ -122,8 +126,9 @@ void main() {
 
     test('runs concatenate back to the cleaned input', () {
       const String input = 'Meeting at 3 بجے شروع';
-      final String rebuilt =
-          LanguagePolicy.splitRuns(input).map((TextRun r) => r.text).join();
+      final String rebuilt = LanguagePolicy.splitRuns(input)
+          .map((TextRun r) => r.text)
+          .join();
       expect(rebuilt, input);
     });
   });

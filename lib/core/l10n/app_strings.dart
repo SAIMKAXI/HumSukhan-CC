@@ -12,450 +12,673 @@ import 'package:humsukhan/core/l10n/app_language.dart';
 enum StringKey {
   /// `HumSukhan`
   appName,
+
   /// `One who speaks with you`
   appTagline,
+
   /// `OK`
   ok,
+
   /// `Cancel`
   cancel,
+
   /// `Save`
   save,
+
   /// `Delete`
   delete,
+
   /// `Discard`
   discard,
+
   /// `Try again`
   retry,
+
   /// `Close`
   close,
+
   /// `Back`
   back,
+
   /// `Next`
   next,
+
   /// `Done`
   done,
+
   /// `Continue`
   continueLabel,
+
   /// `Skip`
   skip,
+
   /// `Get started`
   getStarted,
+
   /// `Share`
   share,
+
   /// `Export`
   export,
+
   /// `Loading…`
   loading,
+
   /// `Dismiss`
   dismiss,
+
   /// `Open system settings`
   openSystemSettings,
+
   /// `Something went wrong`
   somethingWentWrong,
+
   /// `Online`
   online,
+
   /// `Offline`
   offline,
+
   /// `Remove`
   remove,
+
   /// `Edit`
   edit,
+
   /// `Copy`
   copy,
+
   /// `Copied`
   copied,
+
   /// `Home`
   navHome,
+
   /// `Everyday`
   navEveryday,
+
   /// `Professional`
   navProfessional,
+
   /// `Alerts`
   navAlerts,
+
   /// `Settings`
   navSettings,
+
   /// `Welcome back`
   authSignInTitle,
+
   /// `Create your account`
   authSignUpTitle,
+
   /// `Reset your password`
   authForgotTitle,
+
   /// `Choose a new password`
   authRecoveryTitle,
+
   /// `Email`
   authEmail,
+
   /// `Password`
   authPassword,
+
   /// `New password`
   authNewPassword,
+
   /// `Your name`
   authName,
+
   /// `Sign in`
   authSignIn,
+
   /// `Sign up`
   authSignUp,
+
   /// `Send reset link`
   authSendResetLink,
+
   /// `Update password`
   authUpdatePassword,
+
   /// `No account yet? Sign up`
   authNoAccount,
+
   /// `Already have an account? Sign in`
   authHaveAccount,
+
   /// `Forgot your password?`
   authForgotPrompt,
+
   /// `Check your email for the reset link.`
   authResetSent,
+
   /// `Your password has been updated.`
   authPasswordUpdated,
+
   /// `Sign out`
   authSignOut,
+
   /// `Sign out of HumSukhan?`
   authSignOutConfirm,
+
   /// `No email verification needed — you can start straight away.`
   authNoVerification,
+
   /// `Enter your email address.`
   authEmailRequired,
+
   /// `Enter your password.`
   authPasswordRequired,
+
   /// `Enter your name.`
   authNameRequired,
+
   /// `Signed in.`
   authSignedIn,
+
   /// `Welcome to HumSukhan`
   onboardWelcomeTitle,
+
   /// `See what people say, reply in your own words, and know about sounds around you.`
   onboardWelcomeBody,
+
   /// `Everyday conversation`
   onboardEverydayTitle,
+
   /// `Live captions of the person speaking to you. Reply by typing, or let the app speak for you.`
   onboardEverydayBody,
+
   /// `Meetings and lectures`
   onboardProfessionalTitle,
+
   /// `Capture a full transcript, then get a summary with action items you can share.`
   onboardProfessionalBody,
+
   /// `Sounds you cannot hear`
   onboardEnvironmentTitle,
+
   /// `A doorbell, a siren, an alarm — HumSukhan taps your phone and shows you what it heard.`
   onboardEnvironmentBody,
+
   /// `Your audio stays yours`
   onboardPrivacyTitle,
+
   /// `Sound detection runs entirely on this device. Nothing is uploaded, and captions are kept only as long as you choose.`
   onboardPrivacyBody,
+
   /// `Hello, {name}`
   homeGreeting,
+
   /// `Hello`
   homeGreetingAnonymous,
+
   /// `Recent activity`
   homeRecentActivity,
+
   /// `Nothing yet. Start a conversation or a session.`
   homeNoActivity,
+
   /// `Talk to someone`
   homeEverydayCard,
+
   /// `Live captions and spoken replies`
   homeEverydayCardBody,
+
   /// `Record a session`
   homeProfessionalCard,
+
   /// `Full transcript, then a summary`
   homeProfessionalCardBody,
+
   /// `Listen for sounds`
   homeAlertsCard,
+
   /// `On-device alerts for important sounds`
   homeAlertsCardBody,
+
   /// `Everyday`
   everydayTitle,
+
   /// `Start conversation`
   everydayStart,
+
   /// `Stop`
   everydayStop,
+
   /// `Start a conversation, then tap the microphone when the other person begins to speak.`
   everydayIdleHint,
+
   /// `Speech is sent for recognition only while the microphone is on, and is never stored by the recogniser.`
   everydayPrivacyNotice,
+
   /// `Start speaker microphone`
   everydayMicStart,
+
   /// `Stop speaker microphone`
   everydayMicStop,
+
   /// `Microphone off`
   everydayStatusIdle,
+
   /// `Starting…`
   everydayStatusStarting,
+
   /// `Listening`
   everydayStatusListening,
+
   /// `Pause detected — speak again to continue`
   everydayStatusPaused,
+
   /// `Connection lost — reconnecting`
   everydayStatusReconnecting,
+
   /// `Recognition stopped`
   everydayStatusFailed,
+
   /// `Speaking`
   everydayStatusSpeaking,
+
   /// `Them`
   everydaySpeakerLabel,
+
   /// `You`
   everydayYouLabel,
+
   /// `Type a reply`
   everydayComposerHint,
+
   /// `Send`
   everydaySend,
+
   /// `Speak`
   everydaySpeak,
+
   /// `Speak this caption`
   everydaySpeakThis,
+
   /// `Stop speaking`
   everydayStopSpeaking,
+
   /// `Quick replies`
   everydayQuickReplies,
+
   /// `Pause length`
   everydayPauseThreshold,
+
   /// `Short · 1.2s`
   pauseShort,
+
   /// `Natural · 1.7s`
   pauseNatural,
+
   /// `Patient · 2.5s`
   pausePatient,
+
   /// `Manual only`
   pauseManual,
+
   /// `Save this conversation?`
   everydaySaveTitle,
+
   /// `Saved conversations are kept for as long as your retention setting allows.`
   everydaySaveBody,
+
   /// `Conversation saved.`
   everydaySaved,
+
   /// `Conversation deleted.`
   everydayDeleted,
+
   /// `No captions yet. Tap the microphone when the other person speaks.`
   everydayNoCaptions,
+
   /// `Turn the microphone off to type or speak.`
   everydayControlsDisabledWhileListening,
+
   /// `Speaking…`
   everydaySpeaking,
+
   /// `Yes`
   quickReplyYes,
+
   /// `No`
   quickReplyNo,
+
   /// `Thank you`
   quickReplyThanks,
+
   /// `Could you repeat that?`
   quickReplyRepeat,
+
   /// `Please speak a little slower`
   quickReplySlower,
+
   /// `One moment please`
   quickReplyOneMoment,
+
   /// `Could you write that down?`
   quickReplyWriteItDown,
+
   /// `Professional`
   proTitle,
+
   /// `New session`
   proNewSession,
+
   /// `Session name`
   proSessionName,
+
   /// `Type`
   proSessionType,
+
   /// `Meeting`
   proTypeMeeting,
+
   /// `Lecture`
   proTypeLecture,
+
   /// `Class`
   proTypeClass,
+
   /// `Caption language`
   proCaptionLanguage,
+
   /// `Keep for`
   proRetention,
+
   /// `Start recording`
   proStartRecording,
+
   /// `Stop recording`
   proStopRecording,
+
   /// `Recording`
   proRecording,
+
   /// `Transcript`
   proTranscript,
+
   /// `Summary`
   proSummary,
+
   /// `Actions`
   proActions,
+
   /// `Overview`
   proOverview,
+
   /// `Generate summary`
   proGenerateSummary,
+
   /// `Generating the summary…`
   proSummaryGenerating,
+
   /// `No summary yet. Generate one from the transcript.`
   proSummaryEmpty,
+
   /// `No sessions yet. Record a meeting or a lecture.`
   proNoSessions,
+
   /// `Session saved.`
   proSessionSaved,
+
   /// `Session discarded.`
   proSessionDiscarded,
+
   /// `Save this session?`
   proSaveTitle,
+
   /// `Duration`
   proDuration,
+
   /// `Expires in {days} days`
   proExpiresInDays,
+
   /// `Expires tomorrow`
   proExpiresTomorrow,
+
   /// `Expires today`
   proExpiresToday,
+
   /// `Expired`
   proExpired,
+
   /// `Action items`
   proActionItems,
+
   /// `Deadlines`
   proDeadlines,
+
   /// `People mentioned`
   proPeople,
+
   /// `Key points`
   proKeyPoints,
+
   /// `Nothing was captured in this session.`
   proNoTranscript,
+
   /// `Only finished sentences are added to the transcript.`
   proInterimHidden,
+
   /// `Add a note`
   proAddNote,
+
   /// `{count} words`
   proWordCount,
+
   /// `{days} days`
   proRetentionDays,
+
   /// `AI-generated. Check anything important against the transcript.`
   aiDisclaimer,
+
   /// `Alerts`
   envTitle,
+
   /// `Sound monitoring`
   envMonitoring,
+
   /// `Monitoring is off`
   envStateOff,
+
   /// `Starting monitoring…`
   envStateStarting,
+
   /// `Listening for important sounds`
   envStateActive,
+
   /// `Monitoring stopped`
   envStateFailed,
+
   /// `Sounds HumSukhan listens for`
   envSupportedSounds,
+
   /// `Recent alerts`
   envHistory,
+
   /// `No alerts yet.`
   envNoAlerts,
+
   /// `Audio is classified on this device and is never uploaded.`
   envOnDeviceNotice,
+
   /// `How you are alerted`
   envAlertChannels,
+
   /// `Critical`
   envSeverityCritical,
+
   /// `Important`
   envSeverityHigh,
+
   /// `Normal`
   envSeverityNormal,
+
   /// `Siren`
   envSoundSiren,
+
   /// `Doorbell`
   envSoundDoorbell,
+
   /// `Alarm`
   envSoundAlarm,
+
   /// `Baby crying`
   envSoundBabyCry,
+
   /// `Knock at the door`
   envSoundKnock,
+
   /// `Breaking glass`
   envSoundGlassBreak,
+
   /// `Dog barking`
   envSoundDogBark,
+
   /// `Vehicle horn`
   envSoundVehicleHorn,
+
   /// `Phone ringing`
   envSoundPhone,
+
   /// `Sound model ready`
   envModelReady,
+
   /// `Checking the sound model…`
   envModelChecking,
+
   /// `Downloading the sound model…`
   envModelDownloading,
+
   /// `Verifying the sound model…`
   envModelVerifying,
+
   /// `The sound model is not installed.`
   envModelAbsent,
+
   /// `Install the sound model`
   envInstallModel,
+
   /// `Detected at {time}`
   envDetectedAt,
+
   /// `{percent}% confidence`
   envConfidence,
+
   /// `Clear alert history`
   envClearHistory,
+
   /// `Monitoring keeps running while HumSukhan is in the background.`
   envForegroundNotice,
+
   /// `Settings`
   setTitle,
+
   /// `Profile`
   setProfile,
+
   /// `Display name`
   setDisplayName,
+
   /// `Appearance`
   setAppearance,
+
   /// `Dark mode`
   setDarkMode,
+
   /// `High contrast`
   setHighContrast,
+
   /// `Pure black and white with heavier borders.`
   setHighContrastBody,
+
   /// `Large text`
   setLargeText,
+
   /// `Increases text size on top of your system setting.`
   setLargeTextBody,
+
   /// `Caption size`
   setCaptionSize,
+
   /// `This is how captions will look.`
   setCaptionPreview,
+
   /// `Language`
   setLanguage,
+
   /// `App language`
   setAppLanguage,
+
   /// `Caption language`
   setCaptionLanguage,
+
   /// `English`
   setLanguageEnglish,
+
   /// `Urdu`
   setLanguageUrdu,
+
   /// `Alerts`
   setAlerts,
+
   /// `Vibration`
   setHaptic,
+
   /// `On-screen alert`
   setVisual,
+
   /// `Camera flash`
   setTorch,
+
   /// `Screen flash`
   setScreenFlash,
+
   /// `Keep recordings for`
   setRetention,
+
   /// `Sessions and conversations are deleted automatically after this many days.`
   setRetentionBody,
+
   /// `Account`
   setAccount,
+
   /// `On-device model`
   setOfflineModels,
+
   /// `About`
   setAbout,
+
   /// `Version {version}`
   setVersion,
+
   /// `Saved.`
   setSaved,
+
   /// `English`
   langEnglish,
+
   /// `Urdu`
   langUrdu,
+
   /// `Roman Urdu`
   langRomanUrdu,
+
   /// `English and Urdu`
   langMixed,
+
   /// `Not yet detected`
   langUndetermined,
+
   /// `Loading`
   stateLoadingTitle,
+
   /// `That did not work`
   stateErrorTitle,
+
   /// `Nothing here yet`
   stateEmptyTitle,
 }
@@ -512,7 +735,8 @@ const Map<StringKey, String> _english = <StringKey, String>{
   StringKey.authPasswordUpdated: 'Your password has been updated.',
   StringKey.authSignOut: 'Sign out',
   StringKey.authSignOutConfirm: 'Sign out of HumSukhan?',
-  StringKey.authNoVerification: 'No email verification needed — you can start straight away.',
+  StringKey.authNoVerification:
+      'No email verification needed — you can start straight away.',
   StringKey.authEmailRequired: 'Enter your email address.',
   StringKey.authPasswordRequired: 'Enter your password.',
   StringKey.authNameRequired: 'Enter your name.',
@@ -568,8 +792,10 @@ const Map<StringKey, String> _english = <StringKey, String>{
   StringKey.everydaySaveBody: 'Saved conversations are kept for as long as your retention setting allows.',
   StringKey.everydaySaved: 'Conversation saved.',
   StringKey.everydayDeleted: 'Conversation deleted.',
-  StringKey.everydayNoCaptions: 'No captions yet. Tap the microphone when the other person speaks.',
-  StringKey.everydayControlsDisabledWhileListening: 'Turn the microphone off to type or speak.',
+  StringKey.everydayNoCaptions:
+      'No captions yet. Tap the microphone when the other person speaks.',
+  StringKey.everydayControlsDisabledWhileListening:
+      'Turn the microphone off to type or speak.',
   StringKey.everydaySpeaking: 'Speaking…',
   StringKey.quickReplyYes: 'Yes',
   StringKey.quickReplyNo: 'No',
@@ -596,7 +822,8 @@ const Map<StringKey, String> _english = <StringKey, String>{
   StringKey.proOverview: 'Overview',
   StringKey.proGenerateSummary: 'Generate summary',
   StringKey.proSummaryGenerating: 'Generating the summary…',
-  StringKey.proSummaryEmpty: 'No summary yet. Generate one from the transcript.',
+  StringKey.proSummaryEmpty:
+      'No summary yet. Generate one from the transcript.',
   StringKey.proNoSessions: 'No sessions yet. Record a meeting or a lecture.',
   StringKey.proSessionSaved: 'Session saved.',
   StringKey.proSessionDiscarded: 'Session discarded.',
@@ -611,11 +838,13 @@ const Map<StringKey, String> _english = <StringKey, String>{
   StringKey.proPeople: 'People mentioned',
   StringKey.proKeyPoints: 'Key points',
   StringKey.proNoTranscript: 'Nothing was captured in this session.',
-  StringKey.proInterimHidden: 'Only finished sentences are added to the transcript.',
+  StringKey.proInterimHidden:
+      'Only finished sentences are added to the transcript.',
   StringKey.proAddNote: 'Add a note',
   StringKey.proWordCount: '{count} words',
   StringKey.proRetentionDays: '{days} days',
-  StringKey.aiDisclaimer: 'AI-generated. Check anything important against the transcript.',
+  StringKey.aiDisclaimer:
+      'AI-generated. Check anything important against the transcript.',
   StringKey.envTitle: 'Alerts',
   StringKey.envMonitoring: 'Sound monitoring',
   StringKey.envStateOff: 'Monitoring is off',
@@ -625,7 +854,8 @@ const Map<StringKey, String> _english = <StringKey, String>{
   StringKey.envSupportedSounds: 'Sounds HumSukhan listens for',
   StringKey.envHistory: 'Recent alerts',
   StringKey.envNoAlerts: 'No alerts yet.',
-  StringKey.envOnDeviceNotice: 'Audio is classified on this device and is never uploaded.',
+  StringKey.envOnDeviceNotice:
+      'Audio is classified on this device and is never uploaded.',
   StringKey.envAlertChannels: 'How you are alerted',
   StringKey.envSeverityCritical: 'Critical',
   StringKey.envSeverityHigh: 'Important',
@@ -648,7 +878,8 @@ const Map<StringKey, String> _english = <StringKey, String>{
   StringKey.envDetectedAt: 'Detected at {time}',
   StringKey.envConfidence: '{percent}% confidence',
   StringKey.envClearHistory: 'Clear alert history',
-  StringKey.envForegroundNotice: 'Monitoring keeps running while HumSukhan is in the background.',
+  StringKey.envForegroundNotice:
+      'Monitoring keeps running while HumSukhan is in the background.',
   StringKey.setTitle: 'Settings',
   StringKey.setProfile: 'Profile',
   StringKey.setDisplayName: 'Display name',
@@ -657,7 +888,8 @@ const Map<StringKey, String> _english = <StringKey, String>{
   StringKey.setHighContrast: 'High contrast',
   StringKey.setHighContrastBody: 'Pure black and white with heavier borders.',
   StringKey.setLargeText: 'Large text',
-  StringKey.setLargeTextBody: 'Increases text size on top of your system setting.',
+  StringKey.setLargeTextBody:
+      'Increases text size on top of your system setting.',
   StringKey.setCaptionSize: 'Caption size',
   StringKey.setCaptionPreview: 'This is how captions will look.',
   StringKey.setLanguage: 'Language',
@@ -739,7 +971,8 @@ const Map<StringKey, String> _urdu = <StringKey, String>{
   StringKey.authPasswordUpdated: 'آپ کا پاس ورڈ بدل دیا گیا ہے۔',
   StringKey.authSignOut: 'سائن آؤٹ',
   StringKey.authSignOutConfirm: 'ہم سخن سے سائن آؤٹ کریں؟',
-  StringKey.authNoVerification: 'ای میل کی تصدیق ضروری نہیں — آپ فوراً شروع کر سکتے ہیں۔',
+  StringKey.authNoVerification:
+      'ای میل کی تصدیق ضروری نہیں — آپ فوراً شروع کر سکتے ہیں۔',
   StringKey.authEmailRequired: 'اپنا ای میل پتہ درج کریں۔',
   StringKey.authPasswordRequired: 'اپنا پاس ورڈ درج کریں۔',
   StringKey.authNameRequired: 'اپنا نام درج کریں۔',
@@ -749,7 +982,8 @@ const Map<StringKey, String> _urdu = <StringKey, String>{
   StringKey.onboardEverydayTitle: 'روزمرہ گفتگو',
   StringKey.onboardEverydayBody: 'آپ سے بات کرنے والے کی گفتگو براہِ راست تحریر میں۔ لکھ کر جواب دیں، یا ایپ سے بلوائیں۔',
   StringKey.onboardProfessionalTitle: 'اجلاس اور لیکچر',
-  StringKey.onboardProfessionalBody: 'مکمل تحریر محفوظ کریں، پھر خلاصہ اور قابلِ عمل نکات حاصل کریں۔',
+  StringKey.onboardProfessionalBody:
+      'مکمل تحریر محفوظ کریں، پھر خلاصہ اور قابلِ عمل نکات حاصل کریں۔',
   StringKey.onboardEnvironmentTitle: 'وہ آوازیں جو آپ نہیں سن سکتے',
   StringKey.onboardEnvironmentBody: 'دروازے کی گھنٹی، سائرن، الارم — ہم سخن آپ کے فون کو ارتعاش دے کر بتاتا ہے کہ کیا سنا۔',
   StringKey.onboardPrivacyTitle: 'آپ کی آواز آپ کی رہتی ہے',
@@ -767,7 +1001,8 @@ const Map<StringKey, String> _urdu = <StringKey, String>{
   StringKey.everydayTitle: 'روزمرہ',
   StringKey.everydayStart: 'گفتگو شروع کریں',
   StringKey.everydayStop: 'روکیں',
-  StringKey.everydayIdleHint: 'گفتگو شروع کریں، پھر جب دوسرا شخص بولنے لگے تو مائیکروفون دبائیں۔',
+  StringKey.everydayIdleHint:
+      'گفتگو شروع کریں، پھر جب دوسرا شخص بولنے لگے تو مائیکروفون دبائیں۔',
   StringKey.everydayPrivacyNotice: 'آواز صرف اُس وقت شناخت کے لیے بھیجی جاتی ہے جب مائیکروفون آن ہو، اور شناخت کرنے والا اسے محفوظ نہیں کرتا۔',
   StringKey.everydayMicStart: 'مائیکروفون آن کریں',
   StringKey.everydayMicStop: 'مائیکروفون بند کریں',
@@ -795,8 +1030,10 @@ const Map<StringKey, String> _urdu = <StringKey, String>{
   StringKey.everydaySaveBody: 'محفوظ گفتگو آپ کی مقررہ مدت تک رہتی ہے۔',
   StringKey.everydaySaved: 'گفتگو محفوظ ہو گئی۔',
   StringKey.everydayDeleted: 'گفتگو حذف ہو گئی۔',
-  StringKey.everydayNoCaptions: 'ابھی کوئی تحریر نہیں۔ جب دوسرا شخص بولے تو مائیکروفون دبائیں۔',
-  StringKey.everydayControlsDisabledWhileListening: 'لکھنے یا بولنے کے لیے مائیکروفون بند کریں۔',
+  StringKey.everydayNoCaptions:
+      'ابھی کوئی تحریر نہیں۔ جب دوسرا شخص بولے تو مائیکروفون دبائیں۔',
+  StringKey.everydayControlsDisabledWhileListening:
+      'لکھنے یا بولنے کے لیے مائیکروفون بند کریں۔',
   StringKey.everydaySpeaking: 'بول رہا ہے…',
   StringKey.quickReplyYes: 'جی ہاں',
   StringKey.quickReplyNo: 'جی نہیں',
@@ -824,7 +1061,8 @@ const Map<StringKey, String> _urdu = <StringKey, String>{
   StringKey.proGenerateSummary: 'خلاصہ بنائیں',
   StringKey.proSummaryGenerating: 'خلاصہ بنایا جا رہا ہے…',
   StringKey.proSummaryEmpty: 'ابھی خلاصہ نہیں۔ تحریر سے بنائیں۔',
-  StringKey.proNoSessions: 'ابھی کوئی سیشن نہیں۔ کوئی میٹنگ یا لیکچر ریکارڈ کریں۔',
+  StringKey.proNoSessions:
+      'ابھی کوئی سیشن نہیں۔ کوئی میٹنگ یا لیکچر ریکارڈ کریں۔',
   StringKey.proSessionSaved: 'سیشن محفوظ ہو گیا۔',
   StringKey.proSessionDiscarded: 'سیشن ضائع کر دیا گیا۔',
   StringKey.proSaveTitle: 'یہ سیشن محفوظ کریں؟',
@@ -852,7 +1090,8 @@ const Map<StringKey, String> _urdu = <StringKey, String>{
   StringKey.envSupportedSounds: 'ہم سخن جن آوازوں پر نظر رکھتا ہے',
   StringKey.envHistory: 'حالیہ اطلاعات',
   StringKey.envNoAlerts: 'ابھی کوئی اطلاع نہیں۔',
-  StringKey.envOnDeviceNotice: 'آواز کی شناخت اسی ڈیوائس پر ہوتی ہے، کہیں اپ لوڈ نہیں ہوتی۔',
+  StringKey.envOnDeviceNotice:
+      'آواز کی شناخت اسی ڈیوائس پر ہوتی ہے، کہیں اپ لوڈ نہیں ہوتی۔',
   StringKey.envAlertChannels: 'اطلاع کیسے دی جائے',
   StringKey.envSeverityCritical: 'انتہائی اہم',
   StringKey.envSeverityHigh: 'اہم',
@@ -875,7 +1114,8 @@ const Map<StringKey, String> _urdu = <StringKey, String>{
   StringKey.envDetectedAt: '{time} پر محسوس ہوئی',
   StringKey.envConfidence: '{percent}٪ یقین',
   StringKey.envClearHistory: 'اطلاعات کی فہرست صاف کریں',
-  StringKey.envForegroundNotice: 'ہم سخن کے پس منظر میں ہونے پر بھی نگرانی جاری رہتی ہے۔',
+  StringKey.envForegroundNotice:
+      'ہم سخن کے پس منظر میں ہونے پر بھی نگرانی جاری رہتی ہے۔',
   StringKey.setTitle: 'ترتیبات',
   StringKey.setProfile: 'پروفائل',
   StringKey.setDisplayName: 'ظاہری نام',
@@ -898,7 +1138,8 @@ const Map<StringKey, String> _urdu = <StringKey, String>{
   StringKey.setTorch: 'کیمرہ فلیش',
   StringKey.setScreenFlash: 'اسکرین کی چمک',
   StringKey.setRetention: 'ریکارڈنگ کی مدت',
-  StringKey.setRetentionBody: 'سیشن اور گفتگو اتنے دنوں بعد خود بخود حذف ہو جاتے ہیں۔',
+  StringKey.setRetentionBody:
+      'سیشن اور گفتگو اتنے دنوں بعد خود بخود حذف ہو جاتے ہیں۔',
   StringKey.setAccount: 'اکاؤنٹ',
   StringKey.setOfflineModels: 'ڈیوائس کا ماڈل',
   StringKey.setAbout: 'تعارف',
@@ -920,17 +1161,20 @@ const Map<FailureCode, String> _urduFailureMessages = <FailureCode, String>{
   FailureCode.network: 'نیٹ ورک کی درخواست ناکام رہی۔',
   FailureCode.timeout: 'درخواست میں بہت دیر لگ گئی۔',
   FailureCode.microphonePermissionDenied: 'مائیکروفون کی اجازت نہیں دی گئی۔',
-  FailureCode.microphonePermissionPermanentlyDenied: 'اس ایپ کے لیے مائیکروفون بند ہے۔',
+  FailureCode.microphonePermissionPermanentlyDenied:
+      'اس ایپ کے لیے مائیکروفون بند ہے۔',
   FailureCode.microphoneUnavailable: 'مائیکروفون کھل نہیں سکا۔',
   FailureCode.notificationPermissionDenied: 'اطلاعات بند ہیں۔',
-  FailureCode.sttLanguageUnsupported: 'یہ ڈیوائس منتخب زبان کی شناخت نہیں کر سکتی۔',
+  FailureCode.sttLanguageUnsupported:
+      'یہ ڈیوائس منتخب زبان کی شناخت نہیں کر سکتی۔',
   FailureCode.sttStartFailed: 'شناخت شروع نہیں ہو سکی۔',
   FailureCode.sttTransportLost: 'شناخت کرنے والے سے رابطہ منقطع ہو گیا۔',
   FailureCode.sttAuthFailed: 'شناخت کی سروس نے درخواست قبول نہیں کی۔',
   FailureCode.ttsUnavailable: 'اس ڈیوائس پر کوئی بولنے والا انجن موجود نہیں۔',
   FailureCode.ttsVoiceMissing: 'اس زبان کے لیے کوئی آواز نصب نہیں ہے۔',
   FailureCode.ttsFailed: 'بولنے میں ناکامی ہوئی۔',
-  FailureCode.authInvalidCredentials: 'یہ ای میل اور پاس ورڈ آپس میں نہیں ملتے۔',
+  FailureCode.authInvalidCredentials:
+      'یہ ای میل اور پاس ورڈ آپس میں نہیں ملتے۔',
   FailureCode.authEmailInUse: 'اس ای میل سے پہلے ہی ایک اکاؤنٹ موجود ہے۔',
   FailureCode.authWeakPassword: 'یہ پاس ورڈ بہت مختصر ہے۔',
   FailureCode.authInvalidEmail: 'یہ درست ای میل پتہ نہیں ہے۔',
@@ -951,22 +1195,32 @@ const Map<FailureCode, String> _urduFailureMessages = <FailureCode, String>{
 };
 
 const Map<FailureCode, String> _urduFailureRemedies = <FailureCode, String>{
-  FailureCode.offline: 'وائی فائی یا موبائل ڈیٹا سے جڑیں، پھر دوبارہ کوشش کریں۔',
+  FailureCode.offline:
+      'وائی فائی یا موبائل ڈیٹا سے جڑیں، پھر دوبارہ کوشش کریں۔',
   FailureCode.network: 'اپنا رابطہ دیکھیں اور دوبارہ کوشش کریں۔',
   FailureCode.timeout: 'دوبارہ کوشش کریں۔',
-  FailureCode.microphonePermissionDenied: 'جاری رکھنے کے لیے مائیکروفون کی اجازت دیں۔',
-  FailureCode.microphonePermissionPermanentlyDenied: 'سسٹم کی ترتیبات کھول کر ہم سخن کو مائیکروفون کی اجازت دیں۔',
-  FailureCode.microphoneUnavailable: 'مائیکروفون استعمال کرنے والی دوسری ایپس بند کریں، پھر کوشش کریں۔',
-  FailureCode.notificationPermissionDenied: 'نگرانی جاری رکھنے کے لیے اطلاعات کی اجازت دیں۔',
+  FailureCode.microphonePermissionDenied:
+      'جاری رکھنے کے لیے مائیکروفون کی اجازت دیں۔',
+  FailureCode.microphonePermissionPermanentlyDenied:
+      'سسٹم کی ترتیبات کھول کر ہم سخن کو مائیکروفون کی اجازت دیں۔',
+  FailureCode.microphoneUnavailable:
+      'مائیکروفون استعمال کرنے والی دوسری ایپس بند کریں، پھر کوشش کریں۔',
+  FailureCode.notificationPermissionDenied:
+      'نگرانی جاری رکھنے کے لیے اطلاعات کی اجازت دیں۔',
   FailureCode.sttLanguageUnsupported: 'تحریر کی کوئی دوسری زبان منتخب کریں۔',
   FailureCode.sttStartFailed: 'دوبارہ شروع کرنے کی کوشش کریں۔',
   FailureCode.sttTransportLost: 'اپنا رابطہ دیکھیں اور دوبارہ شروع کریں۔',
-  FailureCode.sttAuthFailed: 'سائن آؤٹ کر کے دوبارہ سائن اِن کریں، پھر کوشش کریں۔',
-  FailureCode.ttsUnavailable: 'سسٹم کی ترتیبات میں بولنے والا انجن نصب کریں، پھر کوشش کریں۔',
-  FailureCode.ttsVoiceMissing: 'سسٹم کی تقریری ترتیبات میں یہ زبان نصب کریں، پھر کوشش کریں۔',
+  FailureCode.sttAuthFailed:
+      'سائن آؤٹ کر کے دوبارہ سائن اِن کریں، پھر کوشش کریں۔',
+  FailureCode.ttsUnavailable:
+      'سسٹم کی ترتیبات میں بولنے والا انجن نصب کریں، پھر کوشش کریں۔',
+  FailureCode.ttsVoiceMissing:
+      'سسٹم کی تقریری ترتیبات میں یہ زبان نصب کریں، پھر کوشش کریں۔',
   FailureCode.ttsFailed: 'دوبارہ کوشش کریں۔',
-  FailureCode.authInvalidCredentials: 'ای میل اور پاس ورڈ دیکھیں، یا پاس ورڈ دوبارہ ترتیب دیں۔',
-  FailureCode.authEmailInUse: 'اس کے بجائے سائن اِن کریں، یا پاس ورڈ دوبارہ ترتیب دیں۔',
+  FailureCode.authInvalidCredentials:
+      'ای میل اور پاس ورڈ دیکھیں، یا پاس ورڈ دوبارہ ترتیب دیں۔',
+  FailureCode.authEmailInUse:
+      'اس کے بجائے سائن اِن کریں، یا پاس ورڈ دوبارہ ترتیب دیں۔',
   FailureCode.authWeakPassword: 'کم از کم ۸ حروف استعمال کریں۔',
   FailureCode.authInvalidEmail: 'name@example.com جیسا پتہ درج کریں۔',
   FailureCode.authRateLimited: 'ایک منٹ بعد دوبارہ کوشش کریں۔',
@@ -1020,8 +1274,7 @@ final class AppStrings {
   String failureMessage(FailureCode code) => switch (language) {
     AppLanguage.english => const _EnglishFailureText().message(code),
     AppLanguage.urdu =>
-      _urduFailureMessages[code] ??
-          _urduFailureMessages[FailureCode.unknown]!,
+      _urduFailureMessages[code] ?? _urduFailureMessages[FailureCode.unknown]!,
   };
 
   /// Localised remedy for [code], or `null` when the user can do nothing.

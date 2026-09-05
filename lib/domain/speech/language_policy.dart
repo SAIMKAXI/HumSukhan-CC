@@ -179,7 +179,9 @@ abstract final class LanguagePolicy {
     final StringBuffer out = StringBuffer();
     int i = 0;
     while (i < lower.length) {
-      final String three = i + 3 <= lower.length ? lower.substring(i, i + 3) : '';
+      final String three = i + 3 <= lower.length
+          ? lower.substring(i, i + 3)
+          : '';
       final String two = i + 2 <= lower.length ? lower.substring(i, i + 2) : '';
       final String one = lower[i];
       if (three.isNotEmpty && _trigraphs.containsKey(three)) {
@@ -213,7 +215,9 @@ abstract final class LanguagePolicy {
 
     void flush() {
       if (buffer.isEmpty) return;
-      runs.add(TextRun(buffer.toString(), current ?? ReadingDirection.leftToRight));
+      runs.add(
+        TextRun(buffer.toString(), current ?? ReadingDirection.leftToRight),
+      );
       buffer.clear();
     }
 
@@ -251,7 +255,9 @@ abstract final class LanguagePolicy {
         ltr++;
       }
     }
-    return rtl > ltr ? ReadingDirection.rightToLeft : ReadingDirection.leftToRight;
+    return rtl > ltr
+        ? ReadingDirection.rightToLeft
+        : ReadingDirection.leftToRight;
   }
 }
 
@@ -259,15 +265,85 @@ abstract final class LanguagePolicy {
 /// English words wherever possible; the classifier requires a share of them,
 /// not one hit.
 const Set<String> _romanUrduMarkers = <String>{
-  'aap', 'aapka', 'aapko', 'acha', 'accha', 'agar', 'ajj', 'allah', 'ammi',
-  'abbu', 'aur', 'bahut', 'bohot', 'bhai', 'behen', 'bhi', 'bola', 'bolo',
-  'chahiye', 'chalo', 'dost', 'ghar', 'haan', 'hai', 'hain', 'ho', 'hoon',
-  'hun', 'insha', 'ji', 'kaam', 'kahan', 'kaise', 'kaisa', 'kaisi', 'karo',
-  'karna', 'kya', 'kyun', 'kyunki', 'lekin', 'main', 'mein', 'mera', 'meri',
-  'mujhe', 'nahi', 'nahin', 'pani', 'phir', 'raha', 'rahi', 'sahi', 'shukriya',
-  'subah', 'theek', 'thik', 'tum', 'tumhara', 'waqt', 'wapas', 'ye', 'yeh',
-  'zara', 'zaroor', 'khana', 'baat', 'batao', 'samajh', 'suno', 'dekho',
-  'milna', 'jana', 'aana', 'kal', 'aaj', 'raat', 'sham', 'din',
+  'aap',
+  'aapka',
+  'aapko',
+  'acha',
+  'accha',
+  'agar',
+  'ajj',
+  'allah',
+  'ammi',
+  'abbu',
+  'aur',
+  'bahut',
+  'bohot',
+  'bhai',
+  'behen',
+  'bhi',
+  'bola',
+  'bolo',
+  'chahiye',
+  'chalo',
+  'dost',
+  'ghar',
+  'haan',
+  'hai',
+  'hain',
+  'ho',
+  'hoon',
+  'hun',
+  'insha',
+  'ji',
+  'kaam',
+  'kahan',
+  'kaise',
+  'kaisa',
+  'kaisi',
+  'karo',
+  'karna',
+  'kya',
+  'kyun',
+  'kyunki',
+  'lekin',
+  'main',
+  'mein',
+  'mera',
+  'meri',
+  'mujhe',
+  'nahi',
+  'nahin',
+  'pani',
+  'phir',
+  'raha',
+  'rahi',
+  'sahi',
+  'shukriya',
+  'subah',
+  'theek',
+  'thik',
+  'tum',
+  'tumhara',
+  'waqt',
+  'wapas',
+  'ye',
+  'yeh',
+  'zara',
+  'zaroor',
+  'khana',
+  'baat',
+  'batao',
+  'samajh',
+  'suno',
+  'dekho',
+  'milna',
+  'jana',
+  'aana',
+  'kal',
+  'aaj',
+  'raat',
+  'sham',
+  'din',
 };
 
 /// Roman Urdu words with a settled spelling in Urdu script. The rule-based

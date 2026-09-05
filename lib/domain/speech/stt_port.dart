@@ -44,8 +44,7 @@ final class SttRequest {
       other.punctuate == punctuate;
 
   @override
-  int get hashCode =>
-      Object.hash(language, profile, interimResults, punctuate);
+  int get hashCode => Object.hash(language, profile, interimResults, punctuate);
 }
 
 /// Speech recognition, narrowed to what the application actually needs.
