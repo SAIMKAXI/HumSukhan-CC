@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:humsukhan/application/common/clock.dart';
-import 'package:humsukhan/application/common/id_generator.dart';
+import 'package:humsukhan/core/time/clock.dart';
+import 'package:humsukhan/core/id/id_generator.dart';
 import 'package:humsukhan/application/conversation/conversation_session_state.dart';
 import 'package:humsukhan/core/failure/failure.dart';
 import 'package:humsukhan/core/logging/app_logger.dart';
