@@ -124,6 +124,37 @@ void main() {
       expect(find.text(english(StringKey.envNoAlerts)), findsWidgets);
     });
 
+    testWidgets('dismissing an alert marks it seen and keeps the record', (
+      WidgetTester tester,
+    ) async {
+      final FakeSoundDetector detector = FakeSoundDetector();
+
+      await tester.pumpWidget(
+        harness(child: const EnvironmentScreen(), detector: detector),
+      );
+      await settle(tester);
+      await tester.tap(find.byType(SwitchListTile));
+      await tester.pumpAndSettle();
+
+      detector.observe(SoundKind.alarm, 0.95, DateTime.now());
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.close), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.close));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.close), findsNothing);
+      expect(
+        find.byIcon(Icons.check),
+        findsOneWidget,
+        reason: 'dismissing marks the alert seen, it does not erase it',
+      );
+      expect(
+        find.text(english(soundKindLabel(SoundKind.alarm))),
+        findsNWidgets(2),
+      );
+    });
+
     testWidgets('a detected sound appears with severity and confidence', (
       WidgetTester tester,
     ) async {

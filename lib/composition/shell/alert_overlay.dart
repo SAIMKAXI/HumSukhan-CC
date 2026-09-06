@@ -34,10 +34,15 @@ class _AlertOverlayState extends ConsumerState<AlertOverlay>
   @override
   void initState() {
     super.initState();
-    _flash = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 320),
-    );
+    _flash =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 320),
+        )..addStatusListener((AnimationStatus status) {
+          // Rebuild when the flash starts and stops so the layer is only in the
+          // tree while it is visible.
+          if (mounted) setState(() {});
+        });
     _subscription = ref
         .read(visualAlertsProvider)
         .stream

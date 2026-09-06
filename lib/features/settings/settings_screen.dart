@@ -102,9 +102,12 @@ class SettingsScreen extends ConsumerWidget {
           ),
 
           SectionHeader(strings(StringKey.setLanguage)),
-          ListTile(
-            title: Text(strings(StringKey.setAppLanguage)),
-            trailing: SegmentedButton<AppLanguage>(
+          // Label above, control below, at full width: a segmented control in
+          // a ListTile's trailing slot cannot fit a phone, and the Urdu labels
+          // are wider still.
+          _ChoiceRow(
+            label: strings(StringKey.setAppLanguage),
+            child: SegmentedButton<AppLanguage>(
               segments: <ButtonSegment<AppLanguage>>[
                 ButtonSegment<AppLanguage>(
                   value: AppLanguage.english,
@@ -120,9 +123,9 @@ class SettingsScreen extends ConsumerWidget {
                   unawaited(_controller(ref).setAppLanguage(selection.first)),
             ),
           ),
-          ListTile(
-            title: Text(strings(StringKey.setCaptionLanguage)),
-            trailing: SegmentedButton<LanguageTag>(
+          _ChoiceRow(
+            label: strings(StringKey.setCaptionLanguage),
+            child: SegmentedButton<LanguageTag>(
               segments: <ButtonSegment<LanguageTag>>[
                 ButtonSegment<LanguageTag>(
                   value: LanguageTag.english,
@@ -322,6 +325,31 @@ class SettingsScreen extends ConsumerWidget {
     if (confirmed != true) return;
     await ref.read(authControllerProvider.notifier).controller.signOut();
   }
+}
+
+/// A labelled setting whose control is too wide for a list tile's trailing
+/// slot, laid out as a label above a full-width control.
+class _ChoiceRow extends StatelessWidget {
+  const _ChoiceRow({required this.label, required this.child});
+
+  final String label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(
+      horizontal: AppTokens.spaceMd,
+      vertical: AppTokens.spaceSm,
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(label, style: Theme.of(context).textTheme.bodyLarge),
+        const SizedBox(height: AppTokens.spaceSm),
+        SizedBox(width: double.infinity, child: child),
+      ],
+    ),
+  );
 }
 
 class _ModelTile extends ConsumerWidget {

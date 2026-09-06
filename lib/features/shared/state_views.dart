@@ -31,7 +31,10 @@ class EmptyStateView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    return Center(
+    // Scrollable, not just centred: at large text sizes, or in a short
+    // viewport, a fixed Column clips its own message — and an unreadable
+    // explanation is the same as no explanation.
+    return _ScrollableCentre(
       child: Padding(
         padding: const EdgeInsets.all(AppTokens.spaceLg),
         child: Column(
@@ -155,7 +158,7 @@ class LoadingStateView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    return Center(
+    return _ScrollableCentre(
       child: Padding(
         padding: const EdgeInsets.all(AppTokens.spaceLg),
         child: Column(
@@ -246,4 +249,30 @@ class AiDisclaimer extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Centres [child] and lets it scroll when it does not fit.
+///
+/// Every state view uses this, so a message can never be clipped away by a
+/// short viewport or a large text scale.
+class _ScrollableCentre extends StatelessWidget {
+  const _ScrollableCentre({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (BuildContext context, BoxConstraints constraints) {
+      // These views are used both as a whole screen and as one item inside a
+      // list. In the second case the height is unbounded, and scrolling inside
+      // a scrollable is neither needed nor legal.
+      if (!constraints.hasBoundedHeight) return Center(child: child);
+      return SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Center(child: child),
+        ),
+      );
+    },
+  );
 }

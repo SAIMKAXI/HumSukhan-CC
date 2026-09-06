@@ -74,16 +74,25 @@ void main() {
   });
 
   group('signing in and up', () {
-    test('a successful sign in ends signed in with a notice', () async {
-      await controller.signIn(
-        email: 'sana@example.com',
-        password: 'password123',
-      );
+    test(
+      'a successful sign in ends signed in, with no notice to dismiss',
+      () async {
+        await controller.signIn(
+          email: 'sana@example.com',
+          password: 'password123',
+        );
 
-      expect(controller.state.phase, AuthPhase.signedIn);
-      expect(controller.state.notice, AuthNotice.signedIn);
-      expect(controller.state.isBusy, isFalse);
-    });
+        expect(controller.state.phase, AuthPhase.signedIn);
+        expect(controller.state.isBusy, isFalse);
+        expect(
+          controller.state.notice,
+          isNull,
+          reason:
+              'landing in the app is the feedback; a message here would sit '
+              'over the screen it just revealed',
+        );
+      },
+    );
 
     test('sign up needs no email verification step', () async {
       await controller.signUp(

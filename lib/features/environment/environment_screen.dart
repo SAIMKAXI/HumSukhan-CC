@@ -265,45 +265,68 @@ class _AlertCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: AppTokens.spaceSm),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(AppTokens.spaceMd),
-        leading: Icon(
-          soundKindIcon(event.kind),
-          size: 32,
-          color: event.acknowledged
-              ? theme.colorScheme.onSurfaceVariant
-              : theme.colorScheme.error,
-        ),
-        title: Text(strings(soundKindLabel(event.kind))),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: AppTokens.spaceSm),
-          child: Wrap(
-            spacing: AppTokens.spaceSm,
-            runSpacing: AppTokens.spaceXs,
-            children: <Widget>[
-              SeverityBadge(severity: event.severity, strings: strings),
-              Pill(
-                label: strings.format(StringKey.envDetectedAt, <String, String>{
-                  'time': time,
-                }),
-                icon: Icons.schedule,
+      // A Row, not a ListTile: the badges make this taller than a tile is
+      // designed for, and a ListTile lays its trailing control outside those
+      // bounds — leaving a dismiss button that draws and cannot be tapped.
+      child: Padding(
+        padding: const EdgeInsets.all(AppTokens.spaceMd),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Icon(
+              soundKindIcon(event.kind),
+              size: 32,
+              color: event.acknowledged
+                  ? theme.colorScheme.onSurfaceVariant
+                  : theme.colorScheme.error,
+            ),
+            const SizedBox(width: AppTokens.spaceMd),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    strings(soundKindLabel(event.kind)),
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: AppTokens.spaceSm),
+                  Wrap(
+                    spacing: AppTokens.spaceSm,
+                    runSpacing: AppTokens.spaceXs,
+                    children: <Widget>[
+                      SeverityBadge(severity: event.severity, strings: strings),
+                      Pill(
+                        label: strings.format(
+                          StringKey.envDetectedAt,
+                          <String, String>{'time': time},
+                        ),
+                        icon: Icons.schedule,
+                      ),
+                      Pill(
+                        label: strings.format(
+                          StringKey.envConfidence,
+                          <String, String>{
+                            'percent': '${(event.confidence * 100).round()}',
+                          },
+                        ),
+                        icon: Icons.insights_outlined,
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              Pill(
-                label: strings.format(StringKey.envConfidence, <String, String>{
-                  'percent': '${(event.confidence * 100).round()}',
-                }),
-                icon: Icons.insights_outlined,
-              ),
-            ],
-          ),
-        ),
-        trailing: event.acknowledged
-            ? Icon(Icons.check, color: theme.colorScheme.onSurfaceVariant)
-            : IconButton(
+            ),
+            const SizedBox(width: AppTokens.spaceSm),
+            if (event.acknowledged)
+              Icon(Icons.check, color: theme.colorScheme.onSurfaceVariant)
+            else
+              IconButton(
                 tooltip: strings(StringKey.dismiss),
                 onPressed: onAcknowledge,
                 icon: const Icon(Icons.close),
               ),
+          ],
+        ),
       ),
     );
   }

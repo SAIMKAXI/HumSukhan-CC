@@ -74,9 +74,6 @@ enum AuthNotice {
 
   /// The password was changed.
   passwordUpdated,
-
-  /// Sign-in succeeded.
-  signedIn,
 }
 
 /// Sign in, sign up, sign out, reset, restore.
@@ -160,7 +157,7 @@ final class AuthController {
       );
     }
     return _port.signIn(email: email.trim(), password: password);
-  }, notice: AuthNotice.signedIn);
+  });
 
   /// Creates an account and signs in. No email verification is required.
   Future<Result<Account, AuthFailure>> signUp({
@@ -181,7 +178,7 @@ final class AuthController {
       password: password,
       displayName: displayName?.trim(),
     );
-  }, notice: AuthNotice.signedIn);
+  });
 
   /// Ends the session.
   Future<Result<Unit, AuthFailure>> signOut() async {
@@ -315,10 +312,14 @@ final class AuthController {
     await _states.close();
   }
 
+  /// Runs a sign-in or sign-up.
+  ///
+  /// Success raises no notice: the user lands in the app, and that is the
+  /// feedback. A success message here would also sit over the screen it just
+  /// revealed, covering the controls at the bottom of it.
   Future<Result<Account, AuthFailure>> _run(
-    Future<Result<Account, AuthFailure>> Function() body, {
-    required AuthNotice notice,
-  }) async {
+    Future<Result<Account, AuthFailure>> Function() body,
+  ) async {
     if (_disposed) {
       return const Err<Account, AuthFailure>(
         AuthFailure(FailureCode.cancelled, isRecoverable: false),
@@ -342,7 +343,6 @@ final class AuthController {
           isBusy: false,
           phase: AuthPhase.signedIn,
           account: account,
-          notice: notice,
         ),
         (AuthFailure failure) =>
             _state.copyWith(isBusy: false, failure: failure),

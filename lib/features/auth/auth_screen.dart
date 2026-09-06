@@ -98,7 +98,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         final StringKey key = switch (notice) {
           AuthNotice.resetLinkSent => StringKey.authResetSent,
           AuthNotice.passwordUpdated => StringKey.authPasswordUpdated,
-          AuthNotice.signedIn => StringKey.authSignedIn,
         };
         _announce(strings(key));
         ref
@@ -246,8 +245,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   void _announce(String message, {bool isError = false}) {
     if (!mounted) return;
     final ThemeData theme = Theme.of(context);
+    // Removed, not cleared: a cleared snack bar animates out, and two snack
+    // bars carrying the same text overlap long enough to collide on their
+    // shared Hero tag.
     ScaffoldMessenger.of(context)
-      ..clearSnackBars()
+      ..removeCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
           content: Text(message),

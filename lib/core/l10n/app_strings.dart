@@ -175,9 +175,6 @@ enum StringKey {
   /// `Enter your name.`
   authNameRequired,
 
-  /// `Signed in.`
-  authSignedIn,
-
   /// `Welcome to HumSukhan`
   onboardWelcomeTitle,
 
@@ -749,7 +746,6 @@ const Map<StringKey, String> _english = <StringKey, String>{
   StringKey.authEmailRequired: 'Enter your email address.',
   StringKey.authPasswordRequired: 'Enter your password.',
   StringKey.authNameRequired: 'Enter your name.',
-  StringKey.authSignedIn: 'Signed in.',
   StringKey.onboardWelcomeTitle: 'Welcome to HumSukhan',
   StringKey.onboardWelcomeBody: 'See what people say, reply in your own words, and know about sounds around you.',
   StringKey.onboardEverydayTitle: 'Everyday conversation',
@@ -990,7 +986,6 @@ const Map<StringKey, String> _urdu = <StringKey, String>{
   StringKey.authEmailRequired: 'اپنا ای میل پتہ درج کریں۔',
   StringKey.authPasswordRequired: 'اپنا پاس ورڈ درج کریں۔',
   StringKey.authNameRequired: 'اپنا نام درج کریں۔',
-  StringKey.authSignedIn: 'سائن اِن ہو گئے۔',
   StringKey.onboardWelcomeTitle: 'ہم سخن میں خوش آمدید',
   StringKey.onboardWelcomeBody: 'دیکھیں لوگ کیا کہہ رہے ہیں، اپنے الفاظ میں جواب دیں، اور اردگرد کی آوازوں سے باخبر رہیں۔',
   StringKey.onboardEverydayTitle: 'روزمرہ گفتگو',

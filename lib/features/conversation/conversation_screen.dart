@@ -105,8 +105,11 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   void _message(String text, {bool isError = false}) {
     if (!mounted) return;
     final ThemeData theme = Theme.of(context);
+    // Removed, not cleared: a cleared snack bar animates out, and two snack
+    // bars carrying the same text overlap long enough to collide on their
+    // shared Hero tag.
     ScaffoldMessenger.of(context)
-      ..clearSnackBars()
+      ..removeCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
           content: Text(text),

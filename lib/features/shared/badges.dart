@@ -49,7 +49,16 @@ class Pill extends StatelessWidget {
             Icon(icon, size: 14, color: ink),
             const SizedBox(width: AppTokens.spaceXs + 2),
           ],
-          Text(label, style: theme.textTheme.labelSmall?.copyWith(color: ink)),
+          // Flexible with an ellipsis: a pill has to survive a narrow column
+          // and a long label — several of these sit in one row on a phone, and
+          // the Urdu labels are wider than the English ones.
+          Flexible(
+            child: Text(
+              label,
+              style: theme.textTheme.labelSmall?.copyWith(color: ink),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );

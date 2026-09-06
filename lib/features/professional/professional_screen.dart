@@ -107,8 +107,11 @@ class _ProfessionalScreenState extends ConsumerState<ProfessionalScreen> {
   void _message(String text, {bool isError = false}) {
     if (!mounted) return;
     final ThemeData theme = Theme.of(context);
+    // Removed, not cleared: a cleared snack bar animates out, and two snack
+    // bars carrying the same text overlap long enough to collide on their
+    // shared Hero tag.
     ScaffoldMessenger.of(context)
-      ..clearSnackBars()
+      ..removeCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
           content: Text(text),
@@ -141,6 +144,10 @@ class _ProfessionalScreenState extends ConsumerState<ProfessionalScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(strings(StringKey.proTitle))),
       floatingActionButton: FloatingActionButton.extended(
+        // No hero: this screen stays mounted in the shell's IndexedStack while
+        // a detail route is pushed, and two live heroes with the same tag
+        // assert during the transition.
+        heroTag: null,
         onPressed: () => unawaited(_startSession()),
         icon: const Icon(Icons.fiber_manual_record),
         label: Text(strings(StringKey.proNewSession)),
