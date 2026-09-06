@@ -11,7 +11,12 @@ plugins {
 
 android {
     namespace = "pk.humsukhan.humsukhan"
-    compileSdk = flutter.compileSdkVersion
+    // permission_handler_android compiles against 37, and the build warns that
+    // compiling the app against less than the highest any plugin needs is a
+    // problem waiting to happen. Android SDKs are backward compatible, so
+    // taking the maximum is safe and keeps working when Flutter's default
+    // catches up.
+    compileSdk = maxOf(flutter.compileSdkVersion, 37)
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

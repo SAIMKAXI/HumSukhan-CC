@@ -21,39 +21,43 @@ class MainActivity : FlutterActivity() {
         pendingToggle = pendingToggle ||
             intent.getBooleanExtra(MonitoringTileService.EXTRA_TOGGLE_MONITORING, false)
 
-        channel = MethodChannel(
+        // Deliberately not `.apply { }`: inside that block `this` is the
+        // MethodChannel, and passing it where a Context belongs compiles as far
+        // as the reader's eye and no further. Assigning first keeps `this`
+        // meaning the activity everywhere below.
+        val tileChannel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             CHANNEL,
-        ).apply {
-            setMethodCallHandler { call, result ->
-                when (call.method) {
-                    // Consumed exactly once: a rebuild must not toggle again.
-                    "consumeTileRequest" -> {
-                        val requested = pendingToggle
-                        pendingToggle = false
-                        result.success(requested)
-                    }
-                    // Written here rather than from Dart's own storage so both
-                    // sides read the same file with the same encoding.
-                    "publishActive" -> {
-                        val active = call.arguments as? Boolean ?: false
-                        getSharedPreferences(
-                            MonitoringTileService.PREFS,
-                            MODE_PRIVATE,
-                        ).edit()
-                            .putBoolean(MonitoringTileService.KEY_ACTIVE, active)
-                            .apply()
-                        MonitoringTileService.refreshTile(this)
-                        result.success(null)
-                    }
-                    else -> result.notImplemented()
+        )
+        channel = tileChannel
+        tileChannel.setMethodCallHandler { call, result ->
+            when (call.method) {
+                // Consumed exactly once: a rebuild must not toggle again.
+                "consumeTileRequest" -> {
+                    val requested = pendingToggle
+                    pendingToggle = false
+                    result.success(requested)
                 }
+                // Written here rather than from Dart's own storage so both
+                // sides read the same file with the same encoding.
+                "publishActive" -> {
+                    val active = call.arguments as? Boolean ?: false
+                    getSharedPreferences(
+                        MonitoringTileService.PREFS,
+                        MODE_PRIVATE,
+                    ).edit()
+                        .putBoolean(MonitoringTileService.KEY_ACTIVE, active)
+                        .apply()
+                    MonitoringTileService.refreshTile(this@MainActivity)
+                    result.success(null)
+                }
+                else -> result.notImplemented()
             }
         }
 
         // Speech language packs: the one place the app is allowed to ask the
         // operating system to fetch something on the user's behalf.
-        val install = SpeechInstallPlugin(applicationContext) { this }
+        val install = SpeechInstallPlugin(applicationContext) { this@MainActivity }
         speechInstall = install
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
