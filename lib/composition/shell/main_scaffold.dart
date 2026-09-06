@@ -12,6 +12,7 @@ import 'package:humsukhan/features/environment/environment_screen.dart';
 import 'package:humsukhan/features/home/home_screen.dart';
 import 'package:humsukhan/features/professional/professional_screen.dart';
 import 'package:humsukhan/features/settings/settings_screen.dart';
+import 'package:humsukhan/features/speech/speech_setup_sheet.dart';
 
 /// The five destinations, over an [IndexedStack].
 ///
@@ -101,59 +102,64 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     // Scaffold, and nesting one inside another leaves the inner screen's
     // floating action button, bottom sheets and snack bars layered under the
     // shell — a control that renders and cannot be tapped.
-    return AlertOverlay(
-      child: Material(
-        color: Theme.of(context).colorScheme.surface,
-        child: Column(
-          children: <Widget>[
-            Expanded(
-              child: IndexedStack(
-                index: _index,
-                children: <Widget>[
-                  // Each tab gets its own messenger. A single messenger serves
-                  // every Scaffold registered with it, and all five tabs stay
-                  // mounted in this stack — so one snack bar would be shown
-                  // five times over, colliding on its own Hero tag.
-                  ScaffoldMessenger(child: HomeScreen(onOpenTab: _select)),
-                  const ScaffoldMessenger(child: ConversationScreen()),
-                  const ScaffoldMessenger(child: ProfessionalScreen()),
-                  const ScaffoldMessenger(child: EnvironmentScreen()),
-                  const ScaffoldMessenger(child: SettingsScreen()),
+    // The setup sheet wraps every destination, so the guided download appears
+    // wherever the user hit the missing language — and appears once, rather
+    // than being re-implemented per screen and forgotten on one of them.
+    return SpeechSetupSheet(
+      child: AlertOverlay(
+        child: Material(
+          color: Theme.of(context).colorScheme.surface,
+          child: Column(
+            children: <Widget>[
+              Expanded(
+                child: IndexedStack(
+                  index: _index,
+                  children: <Widget>[
+                    // Each tab gets its own messenger. A single messenger serves
+                    // every Scaffold registered with it, and all five tabs stay
+                    // mounted in this stack — so one snack bar would be shown
+                    // five times over, colliding on its own Hero tag.
+                    ScaffoldMessenger(child: HomeScreen(onOpenTab: _select)),
+                    const ScaffoldMessenger(child: ConversationScreen()),
+                    const ScaffoldMessenger(child: ProfessionalScreen()),
+                    const ScaffoldMessenger(child: EnvironmentScreen()),
+                    const ScaffoldMessenger(child: SettingsScreen()),
+                  ],
+                ),
+              ),
+              NavigationBar(
+                selectedIndex: _index,
+                onDestinationSelected: _select,
+                destinations: <NavigationDestination>[
+                  NavigationDestination(
+                    icon: const Icon(Icons.home_outlined),
+                    selectedIcon: const Icon(Icons.home),
+                    label: strings(StringKey.navHome),
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.forum_outlined),
+                    selectedIcon: const Icon(Icons.forum),
+                    label: strings(StringKey.navEveryday),
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.mic_none_outlined),
+                    selectedIcon: const Icon(Icons.mic),
+                    label: strings(StringKey.navProfessional),
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.notifications_none),
+                    selectedIcon: const Icon(Icons.notifications),
+                    label: strings(StringKey.navAlerts),
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.settings_outlined),
+                    selectedIcon: const Icon(Icons.settings),
+                    label: strings(StringKey.navSettings),
+                  ),
                 ],
               ),
-            ),
-            NavigationBar(
-              selectedIndex: _index,
-              onDestinationSelected: _select,
-              destinations: <NavigationDestination>[
-                NavigationDestination(
-                  icon: const Icon(Icons.home_outlined),
-                  selectedIcon: const Icon(Icons.home),
-                  label: strings(StringKey.navHome),
-                ),
-                NavigationDestination(
-                  icon: const Icon(Icons.forum_outlined),
-                  selectedIcon: const Icon(Icons.forum),
-                  label: strings(StringKey.navEveryday),
-                ),
-                NavigationDestination(
-                  icon: const Icon(Icons.mic_none_outlined),
-                  selectedIcon: const Icon(Icons.mic),
-                  label: strings(StringKey.navProfessional),
-                ),
-                NavigationDestination(
-                  icon: const Icon(Icons.notifications_none),
-                  selectedIcon: const Icon(Icons.notifications),
-                  label: strings(StringKey.navAlerts),
-                ),
-                NavigationDestination(
-                  icon: const Icon(Icons.settings_outlined),
-                  selectedIcon: const Icon(Icons.settings),
-                  label: strings(StringKey.navSettings),
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

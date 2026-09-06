@@ -263,7 +263,7 @@ final class ConversationSession {
     );
 
     final Result<Unit, TtsFailure> result = await _tts.speak(
-      Utterance(text: cleaned, language: language ?? _languageOf(cleaned)),
+      Utterance(text: cleaned, language: language ?? languageOf(cleaned)),
     );
 
     // Liveness check before touching state (B15).
@@ -531,7 +531,12 @@ final class ConversationSession {
     _silenceTimer = null;
   }
 
-  LanguageTag _languageOf(String text) =>
+  /// Which language [text] will be spoken in.
+  ///
+  /// Public because the screen has to check the *right* voice before speaking:
+  /// an Urdu reply inside an English conversation needs an Urdu voice, and
+  /// asking about the session language would check the wrong one.
+  LanguageTag languageOf(String text) =>
       switch (LanguagePolicy.classify(text)) {
         CaptionLanguage.urdu => LanguageTag.urdu,
         CaptionLanguage.romanUrdu => LanguageTag.urdu,

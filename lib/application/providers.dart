@@ -10,6 +10,7 @@ import 'package:humsukhan/application/environment/monitoring_controller.dart';
 import 'package:humsukhan/application/professional/insight_service.dart';
 import 'package:humsukhan/application/professional/session_recorder.dart';
 import 'package:humsukhan/application/settings/settings_controller.dart';
+import 'package:humsukhan/application/speech/speech_setup_controller.dart';
 import 'package:humsukhan/core/id/id_generator.dart';
 import 'package:humsukhan/core/l10n/app_language.dart';
 import 'package:humsukhan/core/l10n/app_strings.dart';
@@ -33,6 +34,7 @@ import 'package:humsukhan/domain/settings/app_settings.dart';
 import 'package:humsukhan/domain/settings/settings_port.dart';
 import 'package:humsukhan/domain/speech/capability.dart';
 import 'package:humsukhan/domain/speech/language_tag.dart';
+import 'package:humsukhan/domain/speech/speech_install_port.dart';
 import 'package:humsukhan/domain/speech/stt_port.dart';
 import 'package:humsukhan/domain/speech/tts_port.dart';
 
@@ -113,6 +115,12 @@ final Provider<TtsPort> ttsPortProvider = Provider<TtsPort>(
 final Provider<SpeechCapabilityPort> capabilityProvider =
     Provider<SpeechCapabilityPort>(
       (Ref ref) => _mustOverride('capabilityProvider'),
+    );
+
+/// Installs speech language packs using the device's own machinery.
+final Provider<SpeechInstallPort> speechInstallProvider =
+    Provider<SpeechInstallPort>(
+      (Ref ref) => _mustOverride('speechInstallProvider'),
     );
 
 /// On-device sound detection.
@@ -229,6 +237,41 @@ final Provider<AppSettings> settingsProvider = Provider<AppSettings>(
   (Ref ref) =>
       ref.watch(settingsControllerProvider).valueOrNull ?? const AppSettings(),
 );
+
+/// The guided "this language needs a download" flow.
+///
+/// Every feature that needs speech routes through this rather than checking
+/// capability itself, so a screen cannot forget the check and present a control
+/// that silently does nothing.
+final NotifierProvider<SpeechSetupNotifier, SpeechSetupState>
+speechSetupProvider = NotifierProvider<SpeechSetupNotifier, SpeechSetupState>(
+  SpeechSetupNotifier.new,
+);
+
+/// Mirrors [SpeechSetupController] into Riverpod.
+final class SpeechSetupNotifier extends Notifier<SpeechSetupState> {
+  SpeechSetupController? _controller;
+
+  /// The controller, for commands.
+  SpeechSetupController get controller => _controller!;
+
+  @override
+  SpeechSetupState build() {
+    final SpeechSetupController controller = SpeechSetupController(
+      capability: ref.watch(capabilityProvider),
+      installer: ref.watch(speechInstallProvider),
+      logger: ref.watch(loggerProvider),
+    );
+    _controller = controller;
+    final StreamSubscription<SpeechSetupState> subscription = controller.states
+        .listen((SpeechSetupState next) => state = next);
+    ref.onDispose(() {
+      unawaited(subscription.cancel());
+      unawaited(controller.dispose());
+    });
+    return controller.state;
+  }
+}
 
 /// The interface language.
 final Provider<AppLanguage> appLanguageProvider = Provider<AppLanguage>(

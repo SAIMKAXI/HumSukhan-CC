@@ -15,6 +15,7 @@ import 'package:humsukhan/domain/conversation/turn_policy.dart';
 import 'package:humsukhan/domain/speech/language_policy.dart';
 import 'package:humsukhan/domain/speech/speech_failure.dart';
 import 'package:humsukhan/features/conversation/conversation_composer.dart';
+import 'package:humsukhan/domain/speech/speech_install_port.dart';
 import 'package:humsukhan/features/conversation/speaker_controls.dart';
 import 'package:humsukhan/features/shared/caption_bubble.dart';
 import 'package:humsukhan/features/shared/state_views.dart';
@@ -57,6 +58,22 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       await _session.stopListening();
       return;
     }
+    // The capability check happens here rather than inside the session,
+    // because only the UI layer can put the download in front of the user —
+    // and if it works out, `ensure` runs the listen itself, so a successful
+    // install lands the user in a live conversation rather than back at a
+    // button they have to press again.
+    await ref
+        .read(speechSetupProvider.notifier)
+        .controller
+        .ensure(
+          facility: SpeechFacility.recognition,
+          language: _session.captionLanguage,
+          action: _startListening,
+        );
+  }
+
+  Future<void> _startListening() async {
     final Result<Unit, SttFailure> result = await _session.startListening();
     // The failure is already in the state; this makes it unmissable.
     if (result case Err<Unit, SttFailure>(:final SttFailure error)) {
@@ -65,6 +82,19 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   }
 
   Future<void> _speak(String text, {String? captionId}) async {
+    // Speaking Urdu on a phone with no Urdu voice is the single most common
+    // way this app used to fail silently. The same guided download answers it.
+    await ref
+        .read(speechSetupProvider.notifier)
+        .controller
+        .ensure(
+          facility: SpeechFacility.synthesis,
+          language: _session.languageOf(text),
+          action: () => _speakNow(text, captionId: captionId),
+        );
+  }
+
+  Future<void> _speakNow(String text, {String? captionId}) async {
     final Result<Unit, TtsFailure> result = await _session.speak(
       text,
       captionId: captionId,

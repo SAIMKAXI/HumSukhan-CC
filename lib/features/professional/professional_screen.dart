@@ -11,6 +11,7 @@ import 'package:humsukhan/core/theme/app_tokens.dart';
 import 'package:humsukhan/domain/professional/professional_session.dart';
 import 'package:humsukhan/domain/professional/retention_policy.dart';
 import 'package:humsukhan/domain/speech/language_tag.dart';
+import 'package:humsukhan/domain/speech/speech_install_port.dart';
 import 'package:humsukhan/features/professional/live_session_view.dart';
 import 'package:humsukhan/features/professional/new_session_sheet.dart';
 import 'package:humsukhan/features/professional/session_detail_screen.dart';
@@ -58,6 +59,20 @@ class _ProfessionalScreenState extends ConsumerState<ProfessionalScreen> {
         );
     if (request == null || !mounted) return;
 
+    // Checked before the session exists, not after: discovering a missing
+    // language ten minutes into a lecture is the failure that costs the most,
+    // and there is no recovering the words already spoken.
+    await ref
+        .read(speechSetupProvider.notifier)
+        .controller
+        .ensure(
+          facility: SpeechFacility.recognition,
+          language: request.language,
+          action: () => _beginRecording(request),
+        );
+  }
+
+  Future<void> _beginRecording(NewSessionRequest request) async {
     final SessionRecorder recorder = ref
         .read(recorderProvider.notifier)
         .recorder;

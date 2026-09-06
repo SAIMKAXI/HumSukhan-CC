@@ -57,6 +57,7 @@ dependencies:
   sherpa_onnx: ^1.13.7
   audioplayers: ^6.8.1
   riverpod: ^3.4.3
+  speech_to_text: ^7.4.0
 
 dev_dependencies:
   flutter_test:

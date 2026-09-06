@@ -99,3 +99,24 @@ abstract interface class SpeechCapabilityPort {
   /// to discover it (B9).
   Future<void> invalidate();
 }
+
+/// What the platform *recogniser* reports about itself.
+///
+/// The synthesis twin of this is [VoiceCataloguePort]. They are separate ports
+/// because the two engines are separate on every platform: a device can caption
+/// Urdu and be unable to speak it, and the user must be told which one is
+/// missing rather than a single blurred "speech unavailable".
+abstract interface class RecognitionCataloguePort {
+  /// Whether a recogniser exists on this device at all.
+  Future<bool> isAvailable();
+
+  /// The locales the recogniser has models for, lower-cased. Empty means the
+  /// engine could not be asked, which is not the same as having no models.
+  Future<Set<String>> availableLocales();
+
+  /// Whether recognition can run without a network connection for [language].
+  ///
+  /// Answering false is not a failure — it means captions will need the
+  /// network, which the user is entitled to know before a lecture starts.
+  Future<bool> supportsOffline(LanguageTag language);
+}

@@ -70,6 +70,7 @@ final class SpeechCapabilityService implements SpeechCapabilityPort {
   /// Creates a capability service.
   SpeechCapabilityService({
     required VoiceCataloguePort voices,
+    required RecognitionCataloguePort recognisers,
     required bool hasCloudFallback,
     required bool hasRecognitionBackend,
     Clock clock = const SystemClock(),
@@ -78,6 +79,7 @@ final class SpeechCapabilityService implements SpeechCapabilityPort {
     String? platformOverride,
     String? osVersionOverride,
   }) : _voices = voices,
+       _recognisers = recognisers,
        _hasCloudFallback = hasCloudFallback,
        _hasRecognitionBackend = hasRecognitionBackend,
        _clock = clock,
@@ -94,6 +96,7 @@ final class SpeechCapabilityService implements SpeechCapabilityPort {
   static String _detectOsVersion() => Platform.operatingSystemVersion;
 
   final VoiceCataloguePort _voices;
+  final RecognitionCataloguePort _recognisers;
   final bool _hasCloudFallback;
   final bool _hasRecognitionBackend;
   final Clock _clock;
@@ -109,12 +112,70 @@ final class SpeechCapabilityService implements SpeechCapabilityPort {
 
   @override
   Future<Capability> stt(LanguageTag language) async {
-    // Recognition runs server-side, so the only question is whether a backend
-    // is configured at all. Both languages are supported by the model.
-    if (!_hasRecognitionBackend) {
-      return const CapabilityUnavailable(FailureCode.sttAuthFailed);
+    final CapabilityKey key = CapabilityKey(
+      platform: _platform,
+      osVersion: _osVersion,
+      // The recogniser exposes no engine identity, so the locale set stands in
+      // for one: gaining a language changes the answer, which is exactly the
+      // event a stale cache must not survive.
+      engineId: 'device-recogniser',
+      language: language,
+      facility: 'stt',
+    );
+
+    final _CachedCapability? cached = _cache[key];
+    if (cached != null && !_isStale(cached)) return cached.capability;
+
+    final Capability capability = await _probeStt(language);
+
+    // An unknown answer is never cached: the next resume asks again.
+    if (capability is! CapabilityUnknown) {
+      _cache[key] = _CachedCapability(capability, _clock.now());
     }
-    return const CapabilityAvailable();
+    _logger.log(LogLevel.debug, 'capability', '$key -> $capability');
+    return capability;
+  }
+
+  Future<Capability> _probeStt(LanguageTag language) async {
+    // The device first: recognition that runs here needs no account, no key
+    // and no signal, and it is what makes the app work the moment it is
+    // installed. The backend is a fallback, not the plan.
+    if (await _recognisers.isAvailable()) {
+      final Set<String> locales = await _recognisers.availableLocales();
+      if (locales.isEmpty) {
+        // The engine did not answer. Not the same as having no languages —
+        // and calling it unavailable would send the user to install something
+        // they may well already have.
+        return _hasRecognitionBackend
+            ? const CapabilityAvailable(locale: 'cloud')
+            : const CapabilityUnknown();
+      }
+      if (_matches(locales, language)) return const CapabilityAvailable();
+    }
+
+    if (_hasRecognitionBackend) {
+      return const CapabilityAvailable(locale: 'cloud');
+    }
+    // Recoverable by exactly one action, which the guided install performs.
+    return const CapabilityUnavailable(FailureCode.sttLanguageUnsupported);
+  }
+
+  /// Whether [locales] covers [language], without ever letting one language
+  /// stand in for another.
+  static bool _matches(Set<String> locales, LanguageTag language) {
+    for (final String candidate in <String>[
+      language.preferredLocale,
+      ...language.fallbackLocales,
+    ]) {
+      final String needle = candidate.toLowerCase().replaceAll('_', '-');
+      if (locales.contains(needle)) return true;
+      for (final String locale in locales) {
+        if (locale.replaceAll('_', '-') == needle) return true;
+        // `ur` matches `ur-pk`; `en` must never match `ur-pk`.
+        if (locale.startsWith('$needle-')) return true;
+      }
+    }
+    return false;
   }
 
   @override

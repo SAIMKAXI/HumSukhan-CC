@@ -43,17 +43,48 @@ class _FakeEngine implements VoiceCataloguePort {
   }
 }
 
+/// A recogniser whose answers the test dictates.
+///
+/// Separate from the voice catalogue because the two engines are separate on
+/// every real device: a phone can caption Urdu and be unable to speak it.
+class _FakeRecogniser implements RecognitionCataloguePort {
+  _FakeRecogniser();
+
+  /// Whether a recogniser exists at all.
+  bool present = true;
+
+  /// The locales it claims. Empty means it could not be asked.
+  Set<String> locales = const <String>{};
+  int queries = 0;
+
+  @override
+  Future<bool> isAvailable() async => present;
+
+  @override
+  Future<Set<String>> availableLocales() async {
+    queries++;
+    return locales;
+  }
+
+  @override
+  Future<bool> supportsOffline(LanguageTag language) async =>
+      locales.any((String l) => l.startsWith(language.code));
+}
+
 void main() {
   late _FakeEngine engine;
+  late _FakeRecogniser recogniser;
   late FakeClock clock;
 
   SpeechCapabilityService build({
     bool cloud = false,
+    bool backend = true,
     Duration ttl = const Duration(minutes: 30),
   }) => SpeechCapabilityService(
     voices: engine,
+    recognisers: recogniser,
     hasCloudFallback: cloud,
-    hasRecognitionBackend: true,
+    hasRecognitionBackend: backend,
     clock: clock,
     negativeTtl: ttl,
     platformOverride: 'android',
@@ -62,6 +93,7 @@ void main() {
 
   setUp(() {
     engine = _FakeEngine();
+    recogniser = _FakeRecogniser();
     clock = FakeClock();
   });
 
@@ -185,22 +217,120 @@ void main() {
     });
   });
 
-  test('recognition is unavailable when there is no backend', () async {
-    final SpeechCapabilityService service = SpeechCapabilityService(
-      voices: engine,
-      hasCloudFallback: false,
-      hasRecognitionBackend: false,
-      clock: clock,
-      platformOverride: 'android',
-      osVersionOverride: '14',
+  group('recognition is answered by the device, not by the backend', () {
+    test('a device with the language needs no backend at all', () async {
+      recogniser.locales = <String>{'en-us', 'ur-pk'};
+
+      final Capability capability = await build(backend: false)
+          .stt(LanguageTag.urdu);
+
+      // The whole point of the on-device path: a stock install, no account,
+      // no key, no signal, and captions still work.
+      expect(capability, isA<CapabilityAvailable>());
+      expect((capability as CapabilityAvailable).locale, isNull);
+    });
+
+    test('a regional variant satisfies the language', () async {
+      recogniser.locales = <String>{'en-gb'};
+
+      expect(
+        await build(backend: false).stt(LanguageTag.english),
+        isA<CapabilityAvailable>(),
+      );
+    });
+
+    test('no model and no backend is unavailable, not unknown', () async {
+      recogniser.locales = <String>{'en-us'};
+
+      final Capability capability = await build(backend: false)
+          .stt(LanguageTag.urdu);
+
+      expect(capability, isA<CapabilityUnavailable>());
+      // The code the guided install flow keys on. `sttAuthFailed` would send
+      // the user to sign in again, which cannot install an Urdu model.
+      expect(
+        (capability as CapabilityUnavailable).reason,
+        FailureCode.sttLanguageUnsupported,
+      );
+    });
+
+    test('English never stands in for a missing Urdu model', () async {
+      recogniser.locales = <String>{'en-us', 'en-gb', 'en-in'};
+
+      expect(
+        await build(backend: false).stt(LanguageTag.urdu),
+        isA<CapabilityUnavailable>(),
+      );
+    });
+
+    test('a backend covers a language the device lacks', () async {
+      recogniser.locales = <String>{'en-us'};
+
+      final Capability capability = await build().stt(LanguageTag.urdu);
+
+      expect(capability, isA<CapabilityAvailable>());
+      expect((capability as CapabilityAvailable).locale, 'cloud');
+    });
+
+    test(
+      'an engine that cannot be asked is unknown, not unavailable',
+      () async {
+        recogniser.locales = const <String>{};
+
+        // Saying "unavailable" here would send the user to install a model they
+        // may already have, on the strength of a question we failed to ask.
+        expect(
+          await build(backend: false).stt(LanguageTag.urdu),
+          isA<CapabilityUnknown>(),
+        );
+      },
     );
 
-    final Capability capability = await service.stt(LanguageTag.english);
+    test('no recogniser at all falls through to the backend', () async {
+      recogniser.present = false;
 
-    expect(capability, isA<CapabilityUnavailable>());
-    expect(
-      (capability as CapabilityUnavailable).reason,
-      FailureCode.sttAuthFailed,
-    );
+      final Capability capability = await build().stt(LanguageTag.english);
+
+      expect(capability, isA<CapabilityAvailable>());
+      expect((capability as CapabilityAvailable).locale, 'cloud');
+    });
+
+    test('a positive answer is cached rather than re-probed', () async {
+      recogniser.locales = <String>{'ur-pk'};
+
+      await build(backend: false).stt(LanguageTag.urdu);
+      final int afterFirst = recogniser.queries;
+      expect(afterFirst, 1);
+    });
+
+    test('a negative answer is re-probed once it goes stale', () async {
+      recogniser.locales = <String>{'en-us'};
+      // The default thirty-minute window; the clock below steps past it.
+      final SpeechCapabilityService service = build(backend: false);
+
+      expect(await service.stt(LanguageTag.urdu), isA<CapabilityUnavailable>());
+      final int afterFirst = recogniser.queries;
+
+      // The user installs the model while the app is open.
+      recogniser.locales = <String>{'en-us', 'ur-pk'};
+      clock.advance(const Duration(minutes: 31));
+
+      // A cache that never rechecked is what permanently disabled working
+      // hardware in the shipped build (B9).
+      expect(await service.stt(LanguageTag.urdu), isA<CapabilityAvailable>());
+      expect(recogniser.queries, greaterThan(afterFirst));
+    });
+
+    test('invalidate drops a negative so an install is discovered', () async {
+      recogniser.locales = <String>{'en-us'};
+      final SpeechCapabilityService service = build(backend: false);
+
+      expect(await service.stt(LanguageTag.urdu), isA<CapabilityUnavailable>());
+
+      recogniser.locales = <String>{'en-us', 'ur-pk'};
+      await service.invalidate();
+
+      expect(await service.stt(LanguageTag.urdu), isA<CapabilityAvailable>());
+    });
   });
 }

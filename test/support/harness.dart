@@ -30,6 +30,7 @@ Widget harness({
   FakeInsightPort? insight,
   FakeSoundDetector? detector,
   FakeCapabilityPort? capability,
+  FakeSpeechInstallPort? speechInstaller,
   FakeModelRepository? models,
   FakeAuthPort? auth,
   FakeSettingsPort? settingsPort,
@@ -54,6 +55,9 @@ Widget harness({
       ttsPortProvider.overrideWithValue(tts ?? FakeTtsPort()),
       detectorProvider.overrideWithValue(detector ?? FakeSoundDetector()),
       capabilityProvider.overrideWithValue(capability ?? FakeCapabilityPort()),
+      speechInstallProvider.overrideWithValue(
+        speechInstaller ?? FakeSpeechInstallPort(),
+      ),
       modelRepositoryProvider.overrideWithValue(
         models ?? FakeModelRepository(),
       ),

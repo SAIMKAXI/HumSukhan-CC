@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:humsukhan/core/time/clock.dart';
 import 'package:humsukhan/core/id/id_generator.dart';
-import 'package:humsukhan/core/failure/failure.dart';
 import 'package:humsukhan/core/result/result.dart';
 import 'package:humsukhan/domain/speech/capability.dart';
 import 'package:humsukhan/domain/speech/language_tag.dart';
 import 'package:humsukhan/domain/speech/speech_failure.dart';
+import 'package:humsukhan/domain/speech/speech_install_port.dart';
 import 'package:humsukhan/domain/speech/stt_event.dart';
 import 'package:humsukhan/domain/speech/stt_port.dart';
 import 'package:humsukhan/domain/speech/tts_port.dart';
@@ -155,14 +155,49 @@ final class FakeCapabilityPort implements SpeechCapabilityPort {
   Future<Capability> stt(LanguageTag language) async =>
       _stt[language] ?? const CapabilityAvailable();
 
+  // Both default to available: the fake stands for an ordinary working phone,
+  // and a test that wants a missing voice says so. Defaulting to *missing*
+  // would make every unrelated test walk through the setup flow.
   @override
   Future<Capability> tts(LanguageTag language) async =>
-      _tts[language] ??
-      const CapabilityUnavailable(FailureCode.ttsVoiceMissing);
+      _tts[language] ?? const CapabilityAvailable();
 
   @override
   Future<void> invalidate() async {
     invalidateCount++;
+  }
+}
+
+/// An installer that never installs anything.
+///
+/// The default for widget tests: capability is available, so the flow is never
+/// entered, and a test that does enter it drives [progress] itself.
+final class FakeSpeechInstallPort implements SpeechInstallPort {
+  /// Creates a fake installer.
+  FakeSpeechInstallPort({this.guided = true});
+
+  /// Whether this "device" offers a guided install.
+  bool guided;
+
+  /// The states each install reports, in order.
+  List<InstallProgress> progress = const <InstallProgress>[
+    InstallStarting(),
+    InstallCompleted(),
+  ];
+
+  /// Which facilities were asked to install.
+  final List<SpeechFacility> requests = <SpeechFacility>[];
+
+  @override
+  Future<bool> canInstall(SpeechFacility facility) async => guided;
+
+  @override
+  Stream<InstallProgress> install(
+    SpeechFacility facility,
+    LanguageTag language,
+  ) {
+    requests.add(facility);
+    return Stream<InstallProgress>.fromIterable(progress);
   }
 }
 

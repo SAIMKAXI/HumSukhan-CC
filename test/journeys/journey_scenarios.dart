@@ -42,6 +42,8 @@ void registerJourneyTests() {
   late FakeSessionRepository sessions;
   late FakeInsightPort insight;
   late RecordingAlertPresenter presenter;
+  late FakeCapabilityPort capability;
+  late FakeSpeechInstallPort installer;
 
   final AppStrings strings = AppStrings.of(AppLanguage.english);
 
@@ -59,6 +61,11 @@ void registerJourneyTests() {
     sessions = FakeSessionRepository();
     insight = FakeInsightPort();
     presenter = RecordingAlertPresenter();
+    // An ordinary phone that already has both languages: the journeys are
+    // about the product working, not about the setup flow, which has its own
+    // tests.
+    capability = FakeCapabilityPort();
+    installer = FakeSpeechInstallPort();
   });
 
   /// A realistic phone surface: 360x800 logical pixels.
@@ -93,6 +100,8 @@ void registerJourneyTests() {
           insightPortProvider.overrideWithValue(insight),
           conversationRepositoryProvider.overrideWithValue(conversations),
           sessionRepositoryProvider.overrideWithValue(sessions),
+          capabilityProvider.overrideWithValue(capability),
+          speechInstallProvider.overrideWithValue(installer),
         ],
         child: const HumSukhanApp(),
       ),

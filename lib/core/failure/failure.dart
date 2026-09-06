@@ -176,14 +176,16 @@ const Map<FailureCode, String> _remedies = <FailureCode, String>{
       'Close other apps that may be using the microphone, then try again.',
   FailureCode.notificationPermissionDenied:
       'Allow notifications so monitoring can keep running.',
-  FailureCode.sttLanguageUnsupported: 'Choose another caption language.',
+  // No "open settings and find the language list". HumSukhan offers the
+  // download itself; the remedy only has to say that a tap is coming.
+  FailureCode.sttLanguageUnsupported:
+      'HumSukhan can download this language for you.',
   FailureCode.sttStartFailed: 'Try starting again.',
   FailureCode.sttTransportLost: 'Check your connection and start again.',
   FailureCode.sttAuthFailed: 'Sign out and sign in again, then retry.',
   FailureCode.ttsUnavailable:
-      'Install a speech engine in system settings, then try again.',
-  FailureCode.ttsVoiceMissing:
-      'Install this language in your system speech settings, then try again.',
+      'This phone has no voice to speak with. Captions still work.',
+  FailureCode.ttsVoiceMissing: 'HumSukhan can download this voice for you.',
   FailureCode.ttsFailed: 'Try again.',
   FailureCode.authInvalidCredentials:
       'Check the email and password, or reset it.',

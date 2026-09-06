@@ -26,7 +26,11 @@ import 'package:humsukhan/infrastructure/storage/key_value_store.dart';
 import 'package:humsukhan/infrastructure/storage/local_repositories.dart';
 import 'package:humsukhan/infrastructure/storage/prefs_settings_store.dart';
 import 'package:humsukhan/infrastructure/storage/user_scope.dart';
+import 'package:humsukhan/infrastructure/speech/platform_speech_installer.dart';
 import 'package:humsukhan/infrastructure/stt/deepgram_stt_adapter.dart';
+import 'package:humsukhan/infrastructure/stt/fallback_stt_adapter.dart';
+import 'package:humsukhan/infrastructure/stt/native_stt_adapter.dart';
+import 'package:humsukhan/infrastructure/stt/platform_recogniser.dart';
 import 'package:humsukhan/infrastructure/stt/recognition_token.dart';
 import 'package:humsukhan/infrastructure/tts/cloud_tts_adapter.dart';
 import 'package:humsukhan/infrastructure/tts/fallback_tts_adapter.dart';
@@ -114,6 +118,37 @@ final Provider<NativeTtsAdapter> nativeTtsProvider = Provider<NativeTtsAdapter>(
     return adapter;
   },
 );
+
+/// The device recogniser.
+///
+/// Shared between the conversation recogniser and the capability probe so both
+/// answer from one engine: a probe that consults a different instance than the
+/// one that will actually listen can disagree with it, and the user would be
+/// told a language works that then does not.
+final Provider<NativeSttAdapter> nativeSttProvider = Provider<NativeSttAdapter>(
+  (Ref ref) {
+    final NativeSttAdapter adapter = NativeSttAdapter(
+      recogniser: SpeechToTextRecogniser(logger: ref.watch(loggerProvider)),
+      logger: ref.watch(loggerProvider),
+    );
+    ref.onDispose(adapter.dispose);
+    return adapter;
+  },
+);
+
+/// The server recogniser, when this build has a backend to reach.
+///
+/// Returns `null` on a stock install, which is the ordinary case: the app
+/// recognises on the device and needs nothing configured to do it.
+DeepgramSttAdapter? _serverRecogniser(Ref ref, {int maxReconnectAttempts = 5}) {
+  if (ref.watch(backendGatewayProvider) == null) return null;
+  return DeepgramSttAdapter(
+    microphone: ref.watch(microphoneProvider),
+    tokens: ref.watch(tokenSourceProvider),
+    logger: ref.watch(loggerProvider),
+    maxReconnectAttempts: maxReconnectAttempts,
+  );
+}
 
 /// The audio tagger, shared by the readiness probe and the detector so the
 /// model is loaded exactly once.
@@ -219,9 +254,9 @@ class HumSukhanScope extends StatelessWidget {
       ),
 
       conversationSttProvider.overrideWith((Ref ref) {
-        final DeepgramSttAdapter adapter = DeepgramSttAdapter(
-          microphone: ref.watch(microphoneProvider),
-          tokens: ref.watch(tokenSourceProvider),
+        final FallbackSttAdapter adapter = FallbackSttAdapter(
+          primary: ref.watch(nativeSttProvider),
+          fallback: _serverRecogniser(ref),
           logger: ref.watch(loggerProvider),
         );
         ref.onDispose(adapter.dispose);
@@ -229,12 +264,19 @@ class HumSukhanScope extends StatelessWidget {
       }),
 
       recorderSttProvider.overrideWith((Ref ref) {
-        final DeepgramSttAdapter adapter = DeepgramSttAdapter(
-          microphone: ref.watch(microphoneProvider),
-          tokens: ref.watch(tokenSourceProvider),
+        final FallbackSttAdapter adapter = FallbackSttAdapter(
+          primary: NativeSttAdapter(
+            recogniser: SpeechToTextRecogniser(
+              logger: ref.watch(loggerProvider),
+            ),
+            logger: ref.watch(loggerProvider),
+            // A lecture is long and a device recogniser is chatty about it.
+            // A larger budget keeps an hour-long session alive through the
+            // occasional bad segment.
+            maxConsecutiveFailures: 8,
+          ),
+          fallback: _serverRecogniser(ref, maxReconnectAttempts: 8),
           logger: ref.watch(loggerProvider),
-          // A lecture is long; give the transport more chances to come back.
-          maxReconnectAttempts: 8,
         );
         ref.onDispose(adapter.dispose);
         return adapter;
@@ -260,9 +302,17 @@ class HumSukhanScope extends StatelessWidget {
       capabilityProvider.overrideWith(
         (Ref ref) => SpeechCapabilityService(
           voices: ref.watch(nativeTtsProvider),
+          recognisers: ref.watch(nativeSttProvider),
           hasCloudFallback: ref.watch(backendGatewayProvider) != null,
           hasRecognitionBackend: ref.watch(backendGatewayProvider) != null,
           clock: ref.watch(clockProvider),
+          logger: ref.watch(loggerProvider),
+        ),
+      ),
+
+      speechInstallProvider.overrideWith(
+        (Ref ref) => PlatformSpeechInstaller(
+          capability: ref.watch(capabilityProvider),
           logger: ref.watch(loggerProvider),
         ),
       ),

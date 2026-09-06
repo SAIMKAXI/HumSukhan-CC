@@ -705,9 +705,83 @@ enum StringKey {
 
   /// `Doorbell, siren, alarm and more. Audio stays on this device.`
   envNotificationBody,
+
+  // ---- guided speech setup ----
+  /// `Set up captions`
+  setupSttTitle,
+
+  /// `Set up the voice`
+  setupTtsTitle,
+
+  /// Explains, without jargon, that a one-off download is needed for captions.
+  setupSttBody,
+
+  /// Explains, without jargon, that a one-off download is needed to speak.
+  setupTtsBody,
+
+  /// `Download`
+  setupDownload,
+
+  /// `Not now`
+  setupNotNow,
+
+  /// `Getting things ready…`
+  setupPreparing,
+
+  /// `Downloading…`
+  setupDownloading,
+
+  /// `Checking…`
+  setupVerifying,
+
+  /// `Ready. Carrying on.`
+  setupReady,
+
+  /// Told to the user when the phone's own installer has opened.
+  setupHandedOff,
+
+  /// `The download did not finish.`
+  setupFailed,
+
+  /// Says the phone offers no way to add the language from inside the app.
+  setupUnsupported,
+
+  /// `Captions stay on this phone`
+  speechOnDevice,
+
+  /// `Captions use the internet`
+  speechOnline,
 }
 
 const Map<StringKey, String> _english = <StringKey, String>{
+  // The guided setup copy says what will happen and what it costs, and never
+  // names a technology. "Language pack", "speech engine" and "recogniser" are
+  // all implementation words the user did not ask to learn.
+  StringKey.setupSttTitle: 'Set up captions',
+  StringKey.setupTtsTitle: 'Set up the voice',
+  StringKey.setupSttBody:
+      'HumSukhan needs a one-off download from your phone to show captions in '
+      'this language. It takes a moment, and afterwards captions work without '
+      'the internet.',
+  StringKey.setupTtsBody:
+      'HumSukhan needs a one-off download from your phone to speak this '
+      'language aloud. It takes a moment, and afterwards it works without the '
+      'internet.',
+  StringKey.setupDownload: 'Download',
+  StringKey.setupNotNow: 'Not now',
+  StringKey.setupPreparing: 'Getting things ready…',
+  StringKey.setupDownloading: 'Downloading…',
+  StringKey.setupVerifying: 'Checking…',
+  StringKey.setupReady: 'Ready. Carrying on.',
+  StringKey.setupHandedOff:
+      'Your phone has opened its own download screen. Choose the language '
+      'there, then come back — HumSukhan will carry on by itself.',
+  StringKey.setupFailed: 'The download did not finish.',
+  StringKey.setupUnsupported:
+      'This phone cannot add the language from inside HumSukhan. Everything '
+      'else still works, and you can switch to English in the meantime.',
+  StringKey.speechOnDevice: 'Captions stay on this phone',
+  StringKey.speechOnline: 'Captions use the internet',
   StringKey.appName: 'HumSukhan',
   StringKey.appTagline: 'One who speaks with you',
   StringKey.ok: 'OK',
@@ -954,6 +1028,31 @@ const Map<StringKey, String> _english = <StringKey, String>{
 };
 
 const Map<StringKey, String> _urdu = <StringKey, String>{
+  StringKey.setupSttTitle: 'کیپشن ترتیب دیں',
+  StringKey.setupTtsTitle: 'آواز ترتیب دیں',
+  StringKey.setupSttBody:
+      'اس زبان میں کیپشن دکھانے کے لیے ہم سخن کو آپ کے فون سے ایک بار ڈاؤن لوڈ '
+      'درکار ہے۔ اس میں تھوڑا وقت لگے گا، اس کے بعد کیپشن انٹرنیٹ کے بغیر بھی '
+      'کام کریں گے۔',
+  StringKey.setupTtsBody:
+      'اس زبان کو بول کر سنانے کے لیے ہم سخن کو آپ کے فون سے ایک بار ڈاؤن لوڈ '
+      'درکار ہے۔ اس میں تھوڑا وقت لگے گا، اس کے بعد یہ انٹرنیٹ کے بغیر بھی کام '
+      'کرے گا۔',
+  StringKey.setupDownload: 'ڈاؤن لوڈ کریں',
+  StringKey.setupNotNow: 'ابھی نہیں',
+  StringKey.setupPreparing: 'تیاری ہو رہی ہے…',
+  StringKey.setupDownloading: 'ڈاؤن لوڈ ہو رہا ہے…',
+  StringKey.setupVerifying: 'جانچا جا رہا ہے…',
+  StringKey.setupReady: 'تیار ہے۔ آگے بڑھ رہے ہیں۔',
+  StringKey.setupHandedOff:
+      'آپ کے فون نے اپنی ڈاؤن لوڈ اسکرین کھول دی ہے۔ وہاں زبان منتخب کریں، پھر '
+      'واپس آ جائیں — ہم سخن خود آگے بڑھا دے گا۔',
+  StringKey.setupFailed: 'ڈاؤن لوڈ مکمل نہیں ہو سکا۔',
+  StringKey.setupUnsupported:
+      'یہ فون ہم سخن کے اندر سے زبان شامل نہیں کر سکتا۔ باقی سب کچھ کام کر رہا '
+      'ہے، اور آپ فی الحال انگریزی استعمال کر سکتے ہیں۔',
+  StringKey.speechOnDevice: 'کیپشن اسی فون پر رہتے ہیں',
+  StringKey.speechOnline: 'کیپشن انٹرنیٹ استعمال کرتے ہیں',
   StringKey.appName: 'ہم سخن',
   StringKey.appTagline: 'جو آپ کے ساتھ بولے',
   StringKey.ok: 'ٹھیک ہے',
@@ -1254,15 +1353,15 @@ const Map<FailureCode, String> _urduFailureRemedies = <FailureCode, String>{
       'مائیکروفون استعمال کرنے والی دوسری ایپس بند کریں، پھر کوشش کریں۔',
   FailureCode.notificationPermissionDenied:
       'نگرانی جاری رکھنے کے لیے اطلاعات کی اجازت دیں۔',
-  FailureCode.sttLanguageUnsupported: 'تحریر کی کوئی دوسری زبان منتخب کریں۔',
+  FailureCode.sttLanguageUnsupported:
+      'ہم سخن یہ زبان آپ کے لیے ڈاؤن لوڈ کر سکتا ہے۔',
   FailureCode.sttStartFailed: 'دوبارہ شروع کرنے کی کوشش کریں۔',
   FailureCode.sttTransportLost: 'اپنا رابطہ دیکھیں اور دوبارہ شروع کریں۔',
   FailureCode.sttAuthFailed:
       'سائن آؤٹ کر کے دوبارہ سائن اِن کریں، پھر کوشش کریں۔',
   FailureCode.ttsUnavailable:
-      'سسٹم کی ترتیبات میں بولنے والا انجن نصب کریں، پھر کوشش کریں۔',
-  FailureCode.ttsVoiceMissing:
-      'سسٹم کی تقریری ترتیبات میں یہ زبان نصب کریں، پھر کوشش کریں۔',
+      'اس فون میں بولنے کے لیے کوئی آواز نہیں۔ کیپشن پھر بھی کام کرتے ہیں۔',
+  FailureCode.ttsVoiceMissing: 'ہم سخن یہ آواز آپ کے لیے ڈاؤن لوڈ کر سکتا ہے۔',
   FailureCode.ttsFailed: 'دوبارہ کوشش کریں۔',
   FailureCode.authInvalidCredentials:
       'ای میل اور پاس ورڈ دیکھیں، یا پاس ورڈ دوبارہ ترتیب دیں۔',

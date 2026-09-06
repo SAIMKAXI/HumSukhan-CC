@@ -3,6 +3,7 @@ package pk.humsukhan.humsukhan
 import android.content.Intent
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 
 /**
@@ -12,6 +13,7 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterActivity() {
 
     private var channel: MethodChannel? = null
+    private var speechInstall: SpeechInstallPlugin? = null
     private var pendingToggle = false
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -48,6 +50,27 @@ class MainActivity : FlutterActivity() {
                 }
             }
         }
+
+        // Speech language packs: the one place the app is allowed to ask the
+        // operating system to fetch something on the user's behalf.
+        val install = SpeechInstallPlugin(applicationContext) { this }
+        speechInstall = install
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            SpeechInstallPlugin.METHOD_CHANNEL,
+        ).setMethodCallHandler(install)
+        EventChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            SpeechInstallPlugin.EVENT_CHANNEL,
+        ).setStreamHandler(install)
+    }
+
+    /** Releases the on-device recogniser the install plugin may hold. */
+    override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        speechInstall?.dispose()
+        speechInstall = null
+        channel = null
+        super.cleanUpFlutterEngine(flutterEngine)
     }
 
     override fun onNewIntent(intent: Intent) {

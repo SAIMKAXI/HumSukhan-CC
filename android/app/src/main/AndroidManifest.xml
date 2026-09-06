@@ -100,5 +100,14 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- The guided language install resolves this before offering the
+             button. Undeclared, resolveActivity returns null on Android 11+
+             and a device that can install a voice looks like one that cannot. -->
+        <intent>
+            <action android:name="android.speech.tts.engine.INSTALL_TTS_DATA"/>
+        </intent>
+        <intent>
+            <action android:name="android.speech.action.RECOGNIZE_SPEECH"/>
+        </intent>
     </queries>
 </manifest>
