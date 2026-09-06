@@ -123,6 +123,139 @@ void main() {
     });
   });
 
+  group('scrolling belongs to the reader', () {
+    /// The caption list's scroll state.
+    ///
+    /// Anchored on a caption rather than found by position: the screen has
+    /// several scrollables, and picking the wrong one would make these tests
+    /// pass or fail for reasons that have nothing to do with captions.
+    /// `ancestor` orders from the inside out, so the first is the list the
+    /// bubble actually sits in.
+    ScrollableState captionList(WidgetTester tester) => tester.state(
+      find
+          .ancestor(
+            of: find.byType(SpeakableCaptionBubble).first,
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+
+    /// Says enough for the caption list to overflow its viewport.
+    ///
+    /// The microphone has to be opened first: the session subscribes to the
+    /// recogniser in `startListening`, so captions emitted before that reach
+    /// nobody.
+    Future<FakeSttPort> longConversation(WidgetTester tester) async {
+      final FakeSttPort stt = FakeSttPort();
+      await tester.pumpWidget(
+        harness(child: const ConversationScreen(), conversationStt: stt),
+      );
+      await settle(tester);
+      await tester.tap(find.text(english(StringKey.everydayStart)));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.mic));
+      await tester.pumpAndSettle();
+
+      for (int i = 0; i < 20; i++) {
+        stt.finalResult('a sentence somebody said, number \$i');
+        await tester.pump();
+        // The pause is what commits a turn, exactly as a real speaker's is.
+        await tester.pump(const Duration(seconds: 2));
+      }
+      await tester.pumpAndSettle();
+      return stt;
+    }
+
+    /// Emits one more finished sentence and lets it settle.
+    Future<void> speak(
+      WidgetTester tester,
+      FakeSttPort stt,
+      String text,
+    ) async {
+      stt.finalResult(text);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('new captions follow along while reading the latest', (
+      WidgetTester tester,
+    ) async {
+      final FakeSttPort stt = await longConversation(tester);
+      final ScrollableState scrollable = captionList(tester);
+      final double before = scrollable.position.pixels;
+      expect(before, greaterThan(0), reason: 'the list should have scrolled');
+
+      await speak(tester, stt, 'one more sentence');
+
+      expect(scrollable.position.pixels, greaterThan(before));
+      expect(find.text(english(StringKey.everydayJumpToLatest)), findsNothing);
+    });
+
+    testWidgets('scrolling back to re-read is not overridden', (
+      WidgetTester tester,
+    ) async {
+      final FakeSttPort stt = await longConversation(tester);
+      final ScrollableState scrollable = captionList(tester);
+
+      // The reader goes back to check something said earlier.
+      scrollable.position.jumpTo(0);
+      await tester.pumpAndSettle();
+
+      await speak(tester, stt, 'somebody keeps talking');
+
+      // Being yanked to the bottom every time anyone speaks makes a long
+      // conversation impossible to re-read (instructions §6).
+      expect(scrollable.position.pixels, 0);
+    });
+
+    testWidgets('a way back to the live end is offered, and works', (
+      WidgetTester tester,
+    ) async {
+      await longConversation(tester);
+      final ScrollableState scrollable = captionList(tester);
+      final double end = scrollable.position.maxScrollExtent;
+
+      scrollable.position.jumpTo(0);
+      await tester.pumpAndSettle();
+
+      final Finder latest = find.text(english(StringKey.everydayJumpToLatest));
+      expect(latest, findsOneWidget);
+
+      await tester.tap(latest);
+      await tester.pumpAndSettle();
+
+      expect(scrollable.position.pixels, closeTo(end, 1));
+      // Following resumes, so the button goes away again.
+      expect(latest, findsNothing);
+    });
+
+    testWidgets('the user\'s own reply always brings them to it', (
+      WidgetTester tester,
+    ) async {
+      await longConversation(tester);
+      final ScrollableState scrollable = captionList(tester);
+      // Typing is locked while the microphone is live, so it closes first —
+      // which is what a real user does before replying. The button shows a
+      // stop glyph while listening.
+      await tester.tap(find.byIcon(Icons.stop));
+      await tester.pumpAndSettle();
+
+      scrollable.position.jumpTo(0);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'my reply');
+      await tester.pump();
+      await tester.tap(find.byIcon(Icons.send));
+      await tester.pumpAndSettle();
+
+      // They just acted; landing them anywhere but on their own words would
+      // be its own kind of wrong.
+      expect(find.text('my reply'), findsOneWidget);
+      expect(scrollable.position.pixels, greaterThan(0));
+    });
+  });
+
   group('an active conversation', () {
     testWidgets('shows the empty state before anything is captured', (
       WidgetTester tester,

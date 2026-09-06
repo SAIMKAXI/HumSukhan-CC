@@ -5,6 +5,7 @@ import 'package:humsukhan/domain/speech/language_tag.dart';
 import 'package:humsukhan/domain/speech/speech_failure.dart';
 import 'package:humsukhan/domain/speech/stt_event.dart';
 import 'package:humsukhan/domain/speech/stt_port.dart';
+import 'package:humsukhan/infrastructure/audio/microphone_source.dart';
 import 'package:humsukhan/infrastructure/stt/native_stt_adapter.dart';
 import 'package:humsukhan/infrastructure/stt/platform_recogniser.dart';
 
@@ -89,14 +90,32 @@ class _FakeRecogniser implements PlatformRecogniser {
       _onError?.call(RecogniserError(code, permanent: permanent));
 }
 
+/// The microphone permission answer, under the test's control.
+class _FakePermission implements MicrophonePermission {
+  AudioFailure? refusal;
+  int asks = 0;
+
+  @override
+  Future<Result<Unit, AudioFailure>> ensurePermission() async {
+    asks++;
+    final AudioFailure? denied = refusal;
+    return denied == null
+        ? const Ok<Unit, AudioFailure>(unit)
+        : Err<Unit, AudioFailure>(denied);
+  }
+}
+
 void main() {
   late _FakeRecogniser recogniser;
+  late _FakePermission permission;
   late NativeSttAdapter adapter;
 
   setUp(() {
     recogniser = _FakeRecogniser();
+    permission = _FakePermission();
     adapter = NativeSttAdapter(
       recogniser: recogniser,
+      permissions: permission,
       restartDelay: Duration.zero,
     );
   });
@@ -154,6 +173,46 @@ void main() {
 
       expect(result.isErr, isTrue);
       expect(recogniser.listens, 0);
+    });
+
+    test('a refused microphone says so, not "recognition failed"', () async {
+      permission.refusal = const AudioFailure(
+        FailureCode.microphonePermissionDenied,
+      );
+
+      final Result<Unit, SttFailure> result = await adapter.start(
+        const SttRequest(language: LanguageTag.english),
+      );
+
+      // "Recognition could not start. Try starting again." is useless to
+      // someone whose microphone is blocked; this is the one they can act on.
+      expect(result.errorOrNull!.code, FailureCode.microphonePermissionDenied);
+      expect(result.errorOrNull!.isRecoverable, isTrue);
+      // The engine is never touched when the answer is already no.
+      expect(recogniser.listens, 0);
+    });
+
+    test('a permanently blocked microphone is not offered a retry', () async {
+      permission.refusal = const AudioFailure(
+        FailureCode.microphonePermissionPermanentlyDenied,
+        isRecoverable: false,
+      );
+
+      final Result<Unit, SttFailure> result = await adapter.start(
+        const SttRequest(language: LanguageTag.english),
+      );
+
+      expect(
+        result.errorOrNull!.code,
+        FailureCode.microphonePermissionPermanentlyDenied,
+      );
+      expect(result.errorOrNull!.isRecoverable, isFalse);
+    });
+
+    test('permission is asked before the engine is prepared', () async {
+      await adapter.start(const SttRequest(language: LanguageTag.english));
+
+      expect(permission.asks, 1);
     });
 
     test('no recogniser at all fails as unrecoverable', () async {

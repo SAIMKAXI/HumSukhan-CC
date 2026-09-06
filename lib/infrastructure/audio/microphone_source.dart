@@ -22,11 +22,26 @@ final class AudioFormat {
   static const int bytesPerSample = 2;
 }
 
+/// The microphone permission question, on its own.
+///
+/// Split out because the device recogniser needs to *ask* about the microphone
+/// without owning an audio pipeline it never uses — the platform recogniser
+/// captures its own audio. Without this the recogniser adapter would have to
+/// report "recognition could not start" for a denied microphone, which tells
+/// the user nothing they can act on.
+abstract interface class MicrophonePermission {
+  /// Whether the microphone may be used, asking the user if necessary.
+  ///
+  /// Distinguishes a refusal that can be asked again from one that can only be
+  /// undone in system settings, because the two need different sentences.
+  Future<Result<Unit, AudioFailure>> ensurePermission();
+}
+
 /// Opens the microphone and hands out raw PCM.
 ///
 /// One implementation, one owner. Nothing else in the app touches `record`.
-abstract interface class MicrophoneSource {
-  /// Whether the microphone may be used, asking the user if necessary.
+abstract interface class MicrophoneSource implements MicrophonePermission {
+  @override
   Future<Result<Unit, AudioFailure>> ensurePermission();
 
   /// Starts capture and returns the PCM stream.

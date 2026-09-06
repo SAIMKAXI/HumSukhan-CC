@@ -8,6 +8,7 @@ import 'package:humsukhan/domain/speech/language_tag.dart';
 import 'package:humsukhan/domain/speech/speech_failure.dart';
 import 'package:humsukhan/domain/speech/stt_event.dart';
 import 'package:humsukhan/domain/speech/stt_port.dart';
+import 'package:humsukhan/infrastructure/audio/microphone_source.dart';
 import 'package:humsukhan/infrastructure/stt/platform_recogniser.dart';
 
 /// Recognition on the device itself, with no account, no key and no network.
@@ -27,13 +28,16 @@ final class NativeSttAdapter implements SttPort, RecognitionCataloguePort {
   /// Creates an adapter.
   NativeSttAdapter({
     required PlatformRecogniser recogniser,
+    required MicrophonePermission permissions,
     AppLogger logger = const SilentLogger(),
     this.restartDelay = const Duration(milliseconds: 120),
     this.maxConsecutiveFailures = 4,
   }) : _recogniser = recogniser,
+       _permissions = permissions,
        _logger = logger;
 
   final PlatformRecogniser _recogniser;
+  final MicrophonePermission _permissions;
   final AppLogger _logger;
 
   /// How long to wait before starting the next segment.
@@ -78,6 +82,23 @@ final class NativeSttAdapter implements SttPort, RecognitionCataloguePort {
       );
     }
     if (_listening) await stop();
+
+    // Asked before the engine is touched. `speech_to_text` will prompt on its
+    // own, but a refusal reaches us only as "initialise returned false" — and
+    // "recognition could not start, try again" is no help to someone whose
+    // microphone is blocked. This path knows the difference between a refusal
+    // that can be asked again and one that only system settings can undo.
+    final Result<Unit, AudioFailure> permission = await _permissions
+        .ensurePermission();
+    if (permission case Err<Unit, AudioFailure>(:final AudioFailure error)) {
+      return Err<Unit, SttFailure>(
+        SttFailure(
+          error.code,
+          detail: error.detail,
+          isRecoverable: error.isRecoverable,
+        ),
+      );
+    }
 
     final bool ready = await _recogniser.initialise(
       onError: _onError,

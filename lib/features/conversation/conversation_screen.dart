@@ -32,18 +32,56 @@ class ConversationScreen extends ConsumerStatefulWidget {
 class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   final ScrollController _scroll = ScrollController();
 
+  /// How far from the bottom still counts as "reading the latest".
+  ///
+  /// Roughly one line of caption text, so a pixel of drift from a rebuild does
+  /// not read as the user having deliberately scrolled away.
+  static const double _stickyThreshold = 80;
+
+  /// Whether new captions should pull the view down with them.
+  ///
+  /// True while the user is reading the newest text. It goes false the moment
+  /// they scroll back to re-read something, and only they can set it true
+  /// again — by scrolling back down, or by pressing *Latest*.
+  bool _followLatest = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(_onScrolled);
+  }
+
   @override
   void dispose() {
-    _scroll.dispose();
+    _scroll
+      ..removeListener(_onScrolled)
+      ..dispose();
     super.dispose();
+  }
+
+  void _onScrolled() {
+    if (!_scroll.hasClients) return;
+    final ScrollPosition position = _scroll.position;
+    final bool atEnd =
+        position.pixels >= position.maxScrollExtent - _stickyThreshold;
+    if (atEnd == _followLatest) return;
+    setState(() => _followLatest = atEnd);
   }
 
   ConversationSession get _session =>
       ref.read(conversationProvider.notifier).session;
 
-  void _scrollToEnd() {
+  /// Scrolls to the newest caption.
+  ///
+  /// [force] is for scrolling the user asked for — sending a reply, or pressing
+  /// *Latest*. Everything else defers to [_followLatest]: dragging a reader
+  /// back down mid-sentence, every time somebody speaks, makes a long
+  /// conversation impossible to re-read (instructions §6).
+  void _scrollToEnd({bool force = false}) {
+    if (!force && !_followLatest) return;
     WidgetsBinding.instance.addPostFrameCallback((Duration _) {
       if (!mounted || !_scroll.hasClients) return;
+      if (force && !_followLatest) setState(() => _followLatest = true);
       _scroll.animateTo(
         _scroll.position.maxScrollExtent,
         duration: const Duration(milliseconds: 200),
@@ -107,7 +145,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   Future<void> _send(String text, {required bool alsoSpeak}) async {
     final Caption? caption = _session.sendTyped(text);
     if (caption == null) return;
-    _scrollToEnd();
+    _scrollToEnd(force: true);
     if (alsoSpeak) await _speak(caption.text, captionId: caption.id);
   }
 
@@ -180,6 +218,8 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
           strings: strings,
           scroll: _scroll,
           captionScale: captionScale,
+          followingLatest: _followLatest,
+          onJumpToLatest: () => _scrollToEnd(force: true),
           onToggleMicrophone: () => unawaited(_toggleMicrophone()),
           onThresholdChanged: _session.setThreshold,
           onSpeakCaption: (Caption caption) =>
@@ -279,12 +319,20 @@ class _ActiveView extends StatelessWidget {
     required this.onSend,
     required this.onSpeakText,
     required this.onStop,
+    required this.followingLatest,
+    required this.onJumpToLatest,
   });
 
   final ConversationSessionState state;
   final AppStrings strings;
   final ScrollController scroll;
   final double captionScale;
+
+  /// Whether the view is tracking the newest caption.
+  final bool followingLatest;
+
+  /// Returns the reader to the newest caption.
+  final VoidCallback onJumpToLatest;
   final VoidCallback onToggleMicrophone;
   final ValueChanged<PauseThreshold> onThresholdChanged;
   final ValueChanged<Caption> onSpeakCaption;
@@ -313,31 +361,49 @@ class _ActiveView extends StatelessWidget {
                   title: strings(StringKey.everydayNoCaptions),
                   icon: Icons.hearing_outlined,
                 )
-              : ListView.builder(
-                  controller: scroll,
-                  padding: const EdgeInsets.all(AppTokens.spaceMd),
-                  itemCount: state.captions.length + (hasPartial ? 1 : 0),
-                  itemBuilder: (BuildContext context, int index) {
-                    if (index >= state.captions.length) {
-                      return PartialCaptionBubble(
-                        text: state.partialText,
-                        strings: strings,
-                        captionScale: captionScale,
-                      );
-                    }
-                    final Caption caption = state.captions[index];
-                    return SpeakableCaptionBubble(
-                      // Keyed by id so a rebuild never re-associates a bubble
-                      // with a different caption.
-                      key: ValueKey<String>(caption.id),
-                      caption: caption,
-                      strings: strings,
-                      isSpeaking: state.speakingCaptionId == caption.id,
-                      captionScale: captionScale,
-                      onSpeak: () => onSpeakCaption(caption),
-                      onStopSpeaking: onStopSpeaking,
-                    );
-                  },
+              : Stack(
+                  children: <Widget>[
+                    ListView.builder(
+                      controller: scroll,
+                      padding: const EdgeInsets.all(AppTokens.spaceMd),
+                      itemCount: state.captions.length + (hasPartial ? 1 : 0),
+                      itemBuilder: (BuildContext context, int index) {
+                        if (index >= state.captions.length) {
+                          return PartialCaptionBubble(
+                            text: state.partialText,
+                            strings: strings,
+                            captionScale: captionScale,
+                          );
+                        }
+                        final Caption caption = state.captions[index];
+                        return SpeakableCaptionBubble(
+                          // Keyed by id so a rebuild never re-associates a bubble
+                          // with a different caption.
+                          key: ValueKey<String>(caption.id),
+                          caption: caption,
+                          strings: strings,
+                          isSpeaking: state.speakingCaptionId == caption.id,
+                          captionScale: captionScale,
+                          onSpeak: () => onSpeakCaption(caption),
+                          onStopSpeaking: onStopSpeaking,
+                        );
+                      },
+                    ),
+                    // Only while the reader has scrolled away. Without it,
+                    // someone re-reading an earlier answer has no way back to
+                    // the live end of a conversation that is still moving.
+                    if (!followingLatest)
+                      Positioned(
+                        right: AppTokens.spaceMd,
+                        bottom: AppTokens.spaceMd,
+                        child: FloatingActionButton.extended(
+                          heroTag: 'conversation-latest',
+                          onPressed: onJumpToLatest,
+                          icon: const Icon(Icons.arrow_downward),
+                          label: Text(strings(StringKey.everydayJumpToLatest)),
+                        ),
+                      ),
+                  ],
                 ),
         ),
         ConversationComposer(

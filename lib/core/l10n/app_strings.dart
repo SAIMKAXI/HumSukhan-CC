@@ -746,6 +746,9 @@ enum StringKey {
   /// Says the phone offers no way to add the language from inside the app.
   setupUnsupported,
 
+  /// `Latest`
+  everydayJumpToLatest,
+
   /// `Saved on this phone`
   accountOnThisDevice,
 
@@ -780,6 +783,7 @@ const Map<StringKey, String> _english = <StringKey, String>{
   StringKey.setupUnsupported:
       'This phone cannot add the language from inside HumSukhan. Everything '
       'else still works, and you can switch to English in the meantime.',
+  StringKey.everydayJumpToLatest: 'Latest',
   StringKey.accountOnThisDevice: 'Saved on this phone',
   StringKey.accountLocalExplain:
       'Your conversations and sessions are kept on this phone. There is no '
@@ -1053,6 +1057,7 @@ const Map<StringKey, String> _urdu = <StringKey, String>{
   StringKey.setupUnsupported:
       'یہ فون ہم سخن کے اندر سے زبان شامل نہیں کر سکتا۔ باقی سب کچھ کام کر رہا '
       'ہے، اور آپ فی الحال انگریزی استعمال کر سکتے ہیں۔',
+  StringKey.everydayJumpToLatest: 'تازہ ترین',
   StringKey.accountOnThisDevice: 'اسی فون پر محفوظ',
   StringKey.accountLocalExplain:
       'آپ کی گفتگو اور سیشن اسی فون پر محفوظ رہتے ہیں۔ سائن اِن کرنے کے لیے کوئی '

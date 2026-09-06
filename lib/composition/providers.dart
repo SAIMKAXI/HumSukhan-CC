@@ -130,6 +130,7 @@ final Provider<NativeSttAdapter> nativeSttProvider = Provider<NativeSttAdapter>(
   (Ref ref) {
     final NativeSttAdapter adapter = NativeSttAdapter(
       recogniser: SpeechToTextRecogniser(logger: ref.watch(loggerProvider)),
+      permissions: ref.watch(microphoneProvider),
       logger: ref.watch(loggerProvider),
     );
     ref.onDispose(adapter.dispose);
@@ -278,6 +279,7 @@ class HumSukhanScope extends StatelessWidget {
             recogniser: SpeechToTextRecogniser(
               logger: ref.watch(loggerProvider),
             ),
+            permissions: ref.watch(microphoneProvider),
             logger: ref.watch(loggerProvider),
             // A lecture is long and a device recogniser is chatty about it.
             // A larger budget keeps an hour-long session alive through the
