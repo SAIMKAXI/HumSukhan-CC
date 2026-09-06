@@ -65,6 +65,23 @@ final class CapabilityUnknown extends Capability {
   String toString() => 'CapabilityUnknown()';
 }
 
+/// What the platform speech engine reports about itself.
+///
+/// Narrow on purpose: answering a capability question must never require the
+/// ability to speak, so the probe cannot make a sound even by accident (B5).
+abstract interface class VoiceCataloguePort {
+  /// The locales the engine has voices for, lower-cased. Empty means the engine
+  /// could not be asked — which is not the same as having no voices.
+  Future<Set<String>> availableLocales();
+
+  /// Identifies the engine, so a cached answer expires when the user installs
+  /// a different one.
+  Future<String> engineId();
+
+  /// Whether the engine has a voice for [language].
+  Future<bool> supports(LanguageTag language);
+}
+
 /// Asks what this device can do, per language.
 ///
 /// Probes must be **silent by construction**: an implementation mutes the engine

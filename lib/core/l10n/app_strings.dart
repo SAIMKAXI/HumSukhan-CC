@@ -679,6 +679,9 @@ enum StringKey {
   /// `Nothing here yet`
   stateEmptyTitle,
 
+  /// `Could not check whether {language} can be spoken`
+  setVoiceUnknown,
+
   /// `Spoken replies`
   setVoiceAvailability,
 
@@ -937,6 +940,7 @@ const Map<StringKey, String> _english = <StringKey, String>{
   StringKey.stateLoadingTitle: 'Loading',
   StringKey.stateErrorTitle: 'That did not work',
   StringKey.stateEmptyTitle: 'Nothing here yet',
+  StringKey.setVoiceUnknown: 'Could not check whether {language} can be spoken',
   StringKey.setVoiceAvailability: 'Spoken replies',
   StringKey.setVoiceReady: '{language} can be spoken on this device',
   StringKey.setVoiceCloud: '{language} is spoken using the server',
@@ -1182,6 +1186,8 @@ const Map<StringKey, String> _urdu = <StringKey, String>{
   StringKey.stateLoadingTitle: 'لوڈ ہو رہا ہے',
   StringKey.stateErrorTitle: 'یہ کام نہیں کر سکا',
   StringKey.stateEmptyTitle: 'ابھی یہاں کچھ نہیں',
+  StringKey.setVoiceUnknown:
+      'معلوم نہیں ہو سکا کہ {language} بولی جا سکتی ہے یا نہیں',
   StringKey.setVoiceAvailability: 'بولے گئے جواب',
   StringKey.setVoiceReady: 'اس ڈیوائس پر {language} بولی جا سکتی ہے',
   StringKey.setVoiceCloud: '{language} سرور کے ذریعے بولی جاتی ہے',

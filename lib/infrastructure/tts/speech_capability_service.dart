@@ -6,7 +6,6 @@ import 'package:humsukhan/core/failure/failure.dart';
 import 'package:humsukhan/core/logging/app_logger.dart';
 import 'package:humsukhan/domain/speech/capability.dart';
 import 'package:humsukhan/domain/speech/language_tag.dart';
-import 'package:humsukhan/infrastructure/tts/native_tts_adapter.dart';
 
 /// Everything that can change a capability answer.
 ///
@@ -70,7 +69,7 @@ final class _CachedCapability {
 final class SpeechCapabilityService implements SpeechCapabilityPort {
   /// Creates a capability service.
   SpeechCapabilityService({
-    required NativeTtsAdapter tts,
+    required VoiceCataloguePort voices,
     required bool hasCloudFallback,
     required bool hasRecognitionBackend,
     Clock clock = const SystemClock(),
@@ -78,7 +77,7 @@ final class SpeechCapabilityService implements SpeechCapabilityPort {
     this.negativeTtl = const Duration(minutes: 30),
     String? platformOverride,
     String? osVersionOverride,
-  }) : _tts = tts,
+  }) : _voices = voices,
        _hasCloudFallback = hasCloudFallback,
        _hasRecognitionBackend = hasRecognitionBackend,
        _clock = clock,
@@ -94,7 +93,7 @@ final class SpeechCapabilityService implements SpeechCapabilityPort {
 
   static String _detectOsVersion() => Platform.operatingSystemVersion;
 
-  final NativeTtsAdapter _tts;
+  final VoiceCataloguePort _voices;
   final bool _hasCloudFallback;
   final bool _hasRecognitionBackend;
   final Clock _clock;
@@ -120,7 +119,7 @@ final class SpeechCapabilityService implements SpeechCapabilityPort {
 
   @override
   Future<Capability> tts(LanguageTag language) async {
-    final String engine = await _tts.engineId();
+    final String engine = await _voices.engineId();
     final CapabilityKey key = CapabilityKey(
       platform: _platform,
       osVersion: _osVersion,
@@ -133,14 +132,25 @@ final class SpeechCapabilityService implements SpeechCapabilityPort {
     if (cached != null && !_isStale(cached)) return cached.capability;
 
     // A query, never an utterance. Nothing audible happens here (B5).
-    final bool supported = await _tts.supports(language);
-    final Capability capability = supported
-        ? const CapabilityAvailable()
-        : _hasCloudFallback
-        ? const CapabilityAvailable(locale: 'cloud')
-        : const CapabilityUnavailable(FailureCode.ttsVoiceMissing);
+    final Set<String> locales = await _voices.availableLocales();
+    final Capability capability;
+    if (locales.isEmpty) {
+      // The engine did not answer. That is not the same as "no voice": saying
+      // a language is unavailable when we simply could not ask would send the
+      // user to install something they may already have.
+      capability = const CapabilityUnknown();
+    } else if (await _voices.supports(language)) {
+      capability = const CapabilityAvailable();
+    } else if (_hasCloudFallback) {
+      capability = const CapabilityAvailable(locale: 'cloud');
+    } else {
+      capability = const CapabilityUnavailable(FailureCode.ttsVoiceMissing);
+    }
 
-    _cache[key] = _CachedCapability(capability, _clock.now());
+    // An unknown answer is never cached: the next resume asks again.
+    if (capability is! CapabilityUnknown) {
+      _cache[key] = _CachedCapability(capability, _clock.now());
+    }
     _logger.log(LogLevel.debug, 'capability', '$key -> $capability');
     return capability;
   }

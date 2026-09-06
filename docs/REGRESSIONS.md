@@ -30,11 +30,11 @@ reach into, and no second `SpeechProvider` to delete.
 | Bug | What the test asserts instead |
 |---|---|
 | **B1** — a stale singleton overwrote every caption | `conversation_session_test.dart` → *each committed caption carries its own text and id*, and *identical captions remain distinct entries*. The session takes every collaborator through its constructor, so there is no global to reach for. Enforced structurally by `layering_test.dart`. |
-| **B5** — the capability probe spoke aloud | `native_tts_adapter.dart` answers capability questions with `getLanguages`, which cannot make a sound. There is no synthesis path in the probe to test *against*; the guarantee is that the code does not exist. |
+| **B5** — the capability probe spoke aloud | `speech_capability_service_test.dart` → *asking about a language only reads the engine's language list*. The service is given a `VoiceCataloguePort`, which has no `speak` at all: a probe that produced sound could not be written against it, let alone compile. |
 | **B6** — a corrupt model was a permanent trap | `monitoring_controller_test.dart` → *a model that will not load blocks the start with a reason*, and the repository quarantines and reinstalls anything that fails size, checksum or load. Not proved against the original existence-only check, which is not in this codebase. |
 | **B7** — five silent early returns | `insight_service_test.dart` → *every failure path changes state*, which walks all five distinct failures and asserts a state change for each. |
 | **B8** — a Speak failure was invisible | `conversation_session_test.dart` → *a speak failure is returned rather than thrown*; the adapters return `Result` and have no throwing path to reintroduce. |
-| **B9** — a stale negative cache | `SpeechCapabilityService` keys on platform + OS version + engine id + language and expires negatives. Covered by construction; a device is needed to see a real engine change. |
+| **B9** — a stale negative cache | `speech_capability_service_test.dart` → *a negative is re-probed once its window passes*, *a different engine invalidates the answer*, and *invalidate drops negatives and keeps positives*. Verified against a fake engine; a device is still needed to see a real engine swap. |
 | **B11** — two implementations, tests bound to the dead one | `layering_test.dart` and one port per role. There is no duplicate to point a test at. |
 | **B13** — the badge lost its brand green | `BrandLogo` supplies `AppTokens.brandIconBackground` itself and `android_manifest_test.dart` checks the asset ships. Whether it *looks* right is a device check. |
 | **B15** — notified after dispose | `conversation_session_test.dart` → *events after dispose change nothing and do not throw*. |
@@ -56,3 +56,4 @@ its own tests before release. Each has a test that fails without its fix.
 | `WindowBuffer` emitted the same 3-second slice repeatedly | `window_buffer_test.dart` while it was being written | `window_buffer_test.dart` |
 | The Quick Settings tile never learned monitoring had started, so it always read "off" | the final audit for unused wiring | `monitoring_controller_test.dart` |
 | Retention was a countdown nothing enforced on the device | the same audit | `retention_sweeper_test.dart` |
+| An engine that could not be queried was reported as having no voice, sending the user to install something they may already have | writing the capability tests | `speech_capability_service_test.dart` |

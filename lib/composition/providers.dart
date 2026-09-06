@@ -259,7 +259,7 @@ class HumSukhanScope extends StatelessWidget {
 
       capabilityProvider.overrideWith(
         (Ref ref) => SpeechCapabilityService(
-          tts: ref.watch(nativeTtsProvider),
+          voices: ref.watch(nativeTtsProvider),
           hasCloudFallback: ref.watch(backendGatewayProvider) != null,
           hasRecognitionBackend: ref.watch(backendGatewayProvider) != null,
           clock: ref.watch(clockProvider),

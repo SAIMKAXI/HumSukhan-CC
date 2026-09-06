@@ -4,6 +4,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:humsukhan/core/failure/failure.dart';
 import 'package:humsukhan/core/logging/app_logger.dart';
 import 'package:humsukhan/core/result/result.dart';
+import 'package:humsukhan/domain/speech/capability.dart';
 import 'package:humsukhan/domain/speech/language_tag.dart';
 import 'package:humsukhan/domain/speech/speech_failure.dart';
 import 'package:humsukhan/domain/speech/tts_port.dart';
@@ -14,7 +15,7 @@ import 'package:humsukhan/domain/speech/utterance.dart';
 /// Speaks, and answers capability questions **without synthesising anything**:
 /// the probe asks the engine which languages it has, it does not say a word.
 /// The shipped bug spoke a full stop on every resume (B5).
-final class NativeTtsAdapter implements TtsPort {
+final class NativeTtsAdapter implements TtsPort, VoiceCataloguePort {
   /// Creates an adapter.
   NativeTtsAdapter({
     FlutterTts? engine,
@@ -38,6 +39,7 @@ final class NativeTtsAdapter implements TtsPort {
   /// The locales the engine reports, lower-cased.
   ///
   /// A query, not an utterance: safe to call at any time, including on resume.
+  @override
   Future<Set<String>> availableLocales() async {
     try {
       final Object? languages = await _tts.getLanguages;
@@ -59,6 +61,7 @@ final class NativeTtsAdapter implements TtsPort {
 
   /// An identifier for the engine in use, so a cache invalidates when the user
   /// installs a different one.
+  @override
   Future<String> engineId() async {
     try {
       final Object? engine = await _tts.getDefaultEngine;
@@ -70,6 +73,7 @@ final class NativeTtsAdapter implements TtsPort {
   }
 
   /// Whether the engine has a voice for [language], asked silently.
+  @override
   Future<bool> supports(LanguageTag language) async {
     final Set<String> locales = await availableLocales();
     if (locales.isEmpty) return false;
