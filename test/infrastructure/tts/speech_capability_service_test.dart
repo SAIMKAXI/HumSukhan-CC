@@ -65,10 +65,6 @@ class _FakeRecogniser implements RecognitionCataloguePort {
     queries++;
     return locales;
   }
-
-  @override
-  Future<bool> supportsOffline(LanguageTag language) async =>
-      locales.any((String l) => l.startsWith(language.code));
 }
 
 void main() {

@@ -174,6 +174,12 @@ final class PlatformSpeechInstaller implements SpeechInstallPort {
           },
         );
 
+    // The poll below outlives the race it is entered into unless something
+    // stops it: losing a `Future.any` does not cancel the loser, so a loop left
+    // running would re-probe the engine every couple of seconds for the life of
+    // the app, invalidating the capability cache each time. This ends it.
+    bool finished = false;
+
     try {
       try {
         await _methods.invokeMethod<String>('installStt', <String, Object?>{
@@ -199,7 +205,11 @@ final class PlatformSpeechInstaller implements SpeechInstallPort {
       final InstallProgress outcome =
           await Future.any(<Future<InstallProgress>>[
             settled.future,
-            _pollUntilReady(SpeechFacility.recognition, language),
+            _pollUntilReady(
+              SpeechFacility.recognition,
+              language,
+              () => finished,
+            ),
           ]).timeout(
             downloadTimeout,
             onTimeout: () => const InstallFailed(FailureCode.timeout),
@@ -218,6 +228,7 @@ final class PlatformSpeechInstaller implements SpeechInstallPort {
       }
       emit(outcome);
     } finally {
+      finished = true;
       await updates.cancel();
     }
   }
@@ -245,16 +256,20 @@ final class PlatformSpeechInstaller implements SpeechInstallPort {
 
   /// Completes with [InstallCompleted] once the engine has the language.
   ///
-  /// Never completes on its own if it does not — the caller always races this
-  /// against a timeout.
+  /// Stops when [abandoned] goes true, which is how the caller ends it after
+  /// the race it was entered into has been won by something else.
   Future<InstallProgress> _pollUntilReady(
     SpeechFacility facility,
     LanguageTag language,
+    bool Function() abandoned,
   ) async {
-    while (true) {
+    while (!abandoned()) {
       await Future<void>.delayed(pollInterval);
+      if (abandoned()) break;
       if (await _isReady(facility, language)) return const InstallCompleted();
     }
+    // Only reached by the loser of the race, whose value `Future.any` discards.
+    return const InstallFailed(FailureCode.cancelled, canRetry: false);
   }
 
   /// Re-asks the engine until it agrees, or [settleTimeout] expires.

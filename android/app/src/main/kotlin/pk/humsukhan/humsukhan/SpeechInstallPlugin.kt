@@ -7,8 +7,6 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.speech.ModelDownloadListener
-import android.speech.RecognitionSupport
-import android.speech.RecognitionSupportCallback
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
@@ -56,9 +54,8 @@ class SpeechInstallPlugin(
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
             "canInstall" -> result.success(canInstall(call.argument<String>("facility")))
-            "installTts" -> installTts(call.argument<String>("locale"), result)
+            "installTts" -> installTts(result)
             "installStt" -> installStt(call.argument<String>("locale"), result)
-            "sttLocales" -> sttLocales(result)
             else -> result.notImplemented()
         }
     }
@@ -80,17 +77,17 @@ class SpeechInstallPlugin(
      * until the user acts, and Dart re-probes the engine when the app resumes
      * rather than believing this call.
      */
-    private fun installTts(locale: String?, result: MethodChannel.Result) {
+    private fun installTts(result: MethodChannel.Result) {
         val activity = activityProvider()
         if (activity == null) {
             result.error("no_activity", "No activity is attached.", null)
             return
         }
+        // The platform defines no extra for preselecting a language on this
+        // intent, so none is invented: the engine opens its own language list
+        // and the user picks from it. Dart verifies the result either way.
         val intent = installerIntent().apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            // Advisory. Engines that honour it open on the right language;
-            // engines that ignore it still open a usable list.
-            locale?.let { putExtra(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, it) }
         }
         if (intent.resolveActivity(context.packageManager) == null) {
             result.error("unsupported", "No installer on this device.", null)
@@ -130,32 +127,7 @@ class SpeechInstallPlugin(
                 val intent = recognitionIntent(locale)
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    recogniser.triggerModelDownload(
-                        intent,
-                        mainExecutor,
-                        object : ModelDownloadListener {
-                            override fun onProgress(completedPercent: Int) {
-                                send(mapOf("state" to "downloading", "progress" to completedPercent / 100.0))
-                            }
-
-                            override fun onSuccess() {
-                                send(mapOf("state" to "completed"))
-                                release()
-                            }
-
-                            // The download was accepted but will run later. The
-                            // user is told it is queued rather than being shown
-                            // a bar that never moves.
-                            override fun onScheduled() {
-                                send(mapOf("state" to "scheduled"))
-                            }
-
-                            override fun onError(error: Int) {
-                                send(mapOf("state" to "failed", "code" to error))
-                                release()
-                            }
-                        },
-                    )
+                    ProgressDownload.start(recogniser, intent, mainExecutor, ::send, ::release)
                 } else {
                     // Android 13 accepts the request but reports nothing back.
                     // Dart polls the locale list instead of inventing progress.
@@ -166,70 +138,6 @@ class SpeechInstallPlugin(
             } catch (error: Exception) {
                 release()
                 result.error("trigger_failed", error.message, null)
-            }
-        }
-    }
-
-    /** The locales the on-device recogniser already has models for. */
-    private fun sttLocales(result: MethodChannel.Result) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-            !SpeechRecognizer.isOnDeviceRecognitionAvailable(context)
-        ) {
-            result.success(emptyList<String>())
-            return
-        }
-        main.post {
-            var settled = false
-            val recogniser = try {
-                SpeechRecognizer.createOnDeviceSpeechRecognizer(context)
-            } catch (error: Exception) {
-                result.success(emptyList<String>())
-                return@post
-            }
-            // The callback is not guaranteed to fire. Without this the Dart
-            // side would await a future that never completes — a spinner with
-            // no end, which the product forbids outright.
-            val timeout = Runnable {
-                if (!settled) {
-                    settled = true
-                    recogniser.destroy()
-                    result.success(emptyList<String>())
-                }
-            }
-            main.postDelayed(timeout, 4_000)
-
-            try {
-                recogniser.checkRecognitionSupport(
-                    recognitionIntent(null),
-                    mainExecutor,
-                    object : RecognitionSupportCallback {
-                        override fun onSupportResult(support: RecognitionSupport) {
-                            if (settled) return
-                            settled = true
-                            main.removeCallbacks(timeout)
-                            recogniser.destroy()
-                            result.success(
-                                (support.installedOnDeviceLanguages +
-                                    support.supportedOnDeviceLanguages).distinct(),
-                            )
-                        }
-
-                        override fun onError(error: Int) {
-                            if (settled) return
-                            settled = true
-                            main.removeCallbacks(timeout)
-                            recogniser.destroy()
-                            result.success(emptyList<String>())
-                        }
-                    },
-                )
-            } catch (error: Exception) {
-                if (!settled) {
-                    settled = true
-                    main.removeCallbacks(timeout)
-                    recogniser.destroy()
-                    result.success(emptyList<String>())
-                }
             }
         }
     }
@@ -261,6 +169,57 @@ class SpeechInstallPlugin(
     fun dispose() {
         release()
         events = null
+    }
+
+    /**
+     * The Android 14 download listener, kept in its own class.
+     *
+     * [ModelDownloadListener] does not exist before API 34. Building the
+     * anonymous object inline would put its resolution inside a method that
+     * older devices still load, which is the classic way to earn a
+     * verification failure on a code path that never runs. A separate class is
+     * only ever loaded on the version that has the interface, and the caller's
+     * SDK_INT check is what guarantees that.
+     */
+    private object ProgressDownload {
+        fun start(
+            recogniser: SpeechRecognizer,
+            intent: Intent,
+            executor: Executor,
+            send: (Map<String, Any?>) -> Unit,
+            release: () -> Unit,
+        ) {
+            recogniser.triggerModelDownload(
+                intent,
+                executor,
+                object : ModelDownloadListener {
+                    override fun onProgress(completedPercent: Int) {
+                        send(
+                            mapOf(
+                                "state" to "downloading",
+                                "progress" to completedPercent / 100.0,
+                            ),
+                        )
+                    }
+
+                    override fun onSuccess() {
+                        send(mapOf("state" to "completed"))
+                        release()
+                    }
+
+                    // Accepted, but the system will run it later. The user is
+                    // told it is queued rather than shown a bar that never moves.
+                    override fun onScheduled() {
+                        send(mapOf("state" to "scheduled"))
+                    }
+
+                    override fun onError(error: Int) {
+                        send(mapOf("state" to "failed", "code" to error))
+                        release()
+                    }
+                },
+            )
+        }
     }
 
     companion object {

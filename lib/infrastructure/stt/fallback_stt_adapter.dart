@@ -42,12 +42,6 @@ final class FallbackSttAdapter implements SttPort {
   @override
   Stream<SttEvent> get events => _events.stream;
 
-  /// Whether the current session is running on the device.
-  ///
-  /// Read by the UI to tell the user, truthfully, whether their words are
-  /// leaving the handset.
-  bool get isOnDevice => _active == null || identical(_active, _primary);
-
   @override
   Future<Result<Unit, SttFailure>> start(SttRequest request) async {
     if (_disposed) {

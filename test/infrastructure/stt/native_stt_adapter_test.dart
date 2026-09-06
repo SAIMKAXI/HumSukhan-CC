@@ -176,11 +176,11 @@ void main() {
           const SttRequest(language: LanguageTag.english),
         );
 
-        // Captions that work over the network beat no captions; the adapter
-        // simply stops claiming the words stayed on the handset.
+        // On-device is tried first and, when the engine has no offline model,
+        // the same listen is retried letting the engine choose. Captions that
+        // work over the network beat no captions at all.
         expect(result.isOk, isTrue);
         expect(recogniser.onDeviceRequests, <bool>[true, false]);
-        expect(adapter.isOnDevice, isFalse);
       },
     );
   });
@@ -415,21 +415,6 @@ void main() {
       );
 
       expect(result.errorOrNull!.code, FailureCode.cancelled);
-    });
-  });
-
-  group('the capability catalogue', () {
-    test('reports the languages the engine actually has', () async {
-      recogniser.locales = <String>{'en-us'};
-
-      expect(await adapter.supportsOffline(LanguageTag.english), isTrue);
-      expect(await adapter.supportsOffline(LanguageTag.urdu), isFalse);
-    });
-
-    test('an engine that cannot be asked claims nothing', () async {
-      recogniser.locales = const <String>{};
-
-      expect(await adapter.supportsOffline(LanguageTag.english), isFalse);
     });
   });
 }

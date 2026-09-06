@@ -113,10 +113,4 @@ abstract interface class RecognitionCataloguePort {
   /// The locales the recogniser has models for, lower-cased. Empty means the
   /// engine could not be asked, which is not the same as having no models.
   Future<Set<String>> availableLocales();
-
-  /// Whether recognition can run without a network connection for [language].
-  ///
-  /// Answering false is not a failure — it means captions will need the
-  /// network, which the user is entitled to know before a lecture starts.
-  Future<bool> supportsOffline(LanguageTag language);
 }

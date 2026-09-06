@@ -64,25 +64,11 @@ final class NativeSttAdapter implements SttPort, RecognitionCataloguePort {
   @override
   Stream<SttEvent> get events => _events.stream;
 
-  /// Whether recognition ran without the network for the current session.
-  ///
-  /// Read by the UI to tell the user, truthfully, whether their words left the
-  /// device — never asserted, only reported.
-  bool get isOnDevice => _onDevice;
-
   @override
   Future<bool> isAvailable() => _recogniser.isAvailable();
 
   @override
   Future<Set<String>> availableLocales() => _recogniser.localeIds();
-
-  @override
-  Future<bool> supportsOffline(LanguageTag language) async {
-    // The platform exposes no query for "can this locale run offline"; the only
-    // honest answer is whether a model for the language exists at all. Claiming
-    // more than the API can tell us would be a guess dressed as a fact.
-    return await _resolveLocale(language) != null;
-  }
 
   @override
   Future<Result<Unit, SttFailure>> start(SttRequest request) async {
