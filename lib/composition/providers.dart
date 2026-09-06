@@ -14,6 +14,7 @@ import 'package:humsukhan/domain/account/account.dart';
 import 'package:humsukhan/domain/environment/sound_event.dart';
 import 'package:humsukhan/infrastructure/audio/microphone_source.dart';
 import 'package:humsukhan/infrastructure/backend/backend_gateway.dart';
+import 'package:humsukhan/infrastructure/backend/device_auth_adapter.dart';
 import 'package:humsukhan/infrastructure/backend/edge_insight_adapter.dart';
 import 'package:humsukhan/infrastructure/backend/supabase_auth_adapter.dart';
 import 'package:humsukhan/infrastructure/backend/supabase_gateway.dart';
@@ -208,7 +209,15 @@ class HumSukhanScope extends StatelessWidget {
       authPortProvider.overrideWith((Ref ref) {
         final SupabaseClient? client = ref.watch(supabaseClientProvider);
         if (client == null) {
-          final UnavailableAuthPort port = UnavailableAuthPort();
+          // No server to sign in to. The app runs on a device account rather
+          // than showing a sign-in screen no password can pass — an
+          // accessibility tool that cannot be opened is the worst outcome
+          // available here.
+          final DeviceAuthAdapter port = DeviceAuthAdapter(
+            store: ref.watch(keyValueStoreProvider),
+            ids: ref.watch(idGeneratorProvider),
+            logger: ref.watch(loggerProvider),
+          );
           ref.onDispose(port.dispose);
           return port;
         }

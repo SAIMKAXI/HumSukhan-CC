@@ -53,7 +53,11 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ),
                 title: Text(account.greetingName),
-                subtitle: Text(account.email),
+                subtitle: Text(
+                  account.isLocal
+                      ? strings(StringKey.accountOnThisDevice)
+                      : account.email,
+                ),
                 trailing: const Icon(Icons.edit_outlined),
                 onTap: () => unawaited(_editName(context, ref, account)),
               ),
@@ -245,11 +249,23 @@ class SettingsScreen extends ConsumerWidget {
           _ModelTile(strings: strings),
 
           SectionHeader(strings(StringKey.setAccount)),
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: Text(strings(StringKey.authSignOut)),
-            onTap: () => unawaited(_signOut(context, ref, strings)),
-          ),
+          // A device account has nowhere to sign out to: doing it would strand
+          // the user on a screen no password can pass and orphan their saved
+          // conversations behind an id they can no longer reach. So the action
+          // is absent rather than present and refusing.
+          if (account?.isLocal ?? false)
+            ListTile(
+              leading: const Icon(Icons.phone_android),
+              title: Text(strings(StringKey.accountOnThisDevice)),
+              subtitle: Text(strings(StringKey.accountLocalExplain)),
+              isThreeLine: true,
+            )
+          else
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: Text(strings(StringKey.authSignOut)),
+              onTap: () => unawaited(_signOut(context, ref, strings)),
+            ),
 
           const SizedBox(height: AppTokens.spaceXl),
           Center(

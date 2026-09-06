@@ -751,6 +751,12 @@ enum StringKey {
 
   /// `Captions use the internet`
   speechOnline,
+
+  /// `Saved on this phone`
+  accountOnThisDevice,
+
+  /// Explains that there is no account to sign in to on this build.
+  accountLocalExplain,
 }
 
 const Map<StringKey, String> _english = <StringKey, String>{
@@ -782,6 +788,10 @@ const Map<StringKey, String> _english = <StringKey, String>{
       'else still works, and you can switch to English in the meantime.',
   StringKey.speechOnDevice: 'Captions stay on this phone',
   StringKey.speechOnline: 'Captions use the internet',
+  StringKey.accountOnThisDevice: 'Saved on this phone',
+  StringKey.accountLocalExplain:
+      'Your conversations and sessions are kept on this phone. There is no '
+      'account to sign in to, and nothing is uploaded.',
   StringKey.appName: 'HumSukhan',
   StringKey.appTagline: 'One who speaks with you',
   StringKey.ok: 'OK',
@@ -1053,6 +1063,10 @@ const Map<StringKey, String> _urdu = <StringKey, String>{
       'ہے، اور آپ فی الحال انگریزی استعمال کر سکتے ہیں۔',
   StringKey.speechOnDevice: 'کیپشن اسی فون پر رہتے ہیں',
   StringKey.speechOnline: 'کیپشن انٹرنیٹ استعمال کرتے ہیں',
+  StringKey.accountOnThisDevice: 'اسی فون پر محفوظ',
+  StringKey.accountLocalExplain:
+      'آپ کی گفتگو اور سیشن اسی فون پر محفوظ رہتے ہیں۔ سائن اِن کرنے کے لیے کوئی '
+      'اکاؤنٹ نہیں، اور کچھ بھی اپ لوڈ نہیں ہوتا۔',
   StringKey.appName: 'ہم سخن',
   StringKey.appTagline: 'جو آپ کے ساتھ بولے',
   StringKey.ok: 'ٹھیک ہے',

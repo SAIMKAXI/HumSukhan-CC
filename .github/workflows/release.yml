@@ -72,6 +72,25 @@ jobs:
           keyPassword=$KEY_PASSWORD
           PROPS
 
+      # Not fatal: without a backend the app runs on a device account and the
+      # speech features, which are on-device, still work. It is still almost
+      # always a mistake, so it is stated loudly rather than discovered by a
+      # user who cannot sign in.
+      - name: Report whether this build has a backend
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::warning::No Supabase configuration. This build will run \
+              on a device-local account with no sign-in, no sync and no \
+              AI summaries."
+            echo "backend: **absent** (device-local accounts only)" \
+              >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "backend: present" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Build the release APK
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
