@@ -17,6 +17,10 @@ on:
         type: boolean
         default: true
 
+# Needed to publish the pre-release below.
+permissions:
+  contents: write
+
 env:
   FLUTTER_VERSION: '3.47.2'
 
@@ -98,19 +102,62 @@ jobs:
           echo "built $(du -h "$apk" | cut -f1)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Name it after the commit it came from
+        id: naming
         run: |
           version=$(grep -m1 '^version:' pubspec.yaml \
             | sed 's/version:[[:space:]]*//' | cut -d'+' -f1)
           cp build/app/outputs/flutter-apk/app-release.apk \
              "humsukhan-$version-${GITHUB_SHA::7}.apk"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          # Not `v...`: that pattern belongs to the Release workflow, which
+          # publishes signed builds only. A test build must not be able to
+          # trigger it, or to be mistaken for one of its releases.
+          echo "tag=test-$version-${{ github.run_number }}" >> "$GITHUB_OUTPUT"
 
-      - name: Upload the APK
+      - name: Upload the APK as a run artifact
         uses: actions/upload-artifact@v4
         with:
           name: humsukhan-apk
           path: humsukhan-*.apk
           if-no-files-found: error
           retention-days: 30
+
+      # An artifact lives under Actions and needs a GitHub login to fetch. A
+      # release sits on the repository's front page and anyone can download it,
+      # which is what "give me a build to try" actually means.
+      #
+      # Always a pre-release, and titled so the distinction survives being
+      # skim-read: this is not the signed build the Release workflow makes.
+      - name: Publish it as a pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.naming.outputs.tag }}
+          name: >-
+            Test build ${{ steps.naming.outputs.version }}
+            (${{ steps.naming.outputs.tag }})
+          prerelease: true
+          files: humsukhan-*.apk
+          fail_on_unmatched_files: true
+          body: |
+            **A test build. Not a release.**
+
+            Built from `${{ github.sha }}` for trying the app on a phone.
+
+            - **Signed with Android's debug key**, because no upload keystore
+              is configured. It installs and runs. It cannot go to Google Play,
+              and it cannot upgrade an install signed with a different key —
+              uninstall the old one first if an update refuses.
+            - **Built ${{ inputs.backend && 'with' || 'without' }} a backend.**
+              Speech runs on the device either way: captions, the speak button,
+              the language download and sound alerts all work with nothing
+              configured. Sign-in and AI summaries are the parts that need a
+              server, and they say so rather than failing silently.
+
+            Install by downloading the `.apk` below and opening it on the
+            phone, allowing installation from unknown sources when asked.
+
+            The signed, publishable build comes from the Release workflow
+            instead, driven by a `v*` tag.
 
       - name: Clean up the signing material
         if: always()
