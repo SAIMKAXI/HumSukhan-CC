@@ -243,13 +243,20 @@ final class SessionRecorder {
     // phase back to recording behind the user's decision.
     _generation++;
     _pausedAt = _clock.now();
-    await _subscription?.cancel();
-    _subscription = null;
-    await _stt.stop();
-    if (_disposed) return;
+
+    // The state moves before the transport is torn down, not after. Closing a
+    // recogniser takes a moment, and leaving "Recording" on screen through it
+    // shows the opposite of what the user just asked for — to a reader for
+    // whom that banner is the only feedback there is. Anything arriving during
+    // the teardown is dropped by the paused guard in [_onEvent].
     _emit(
       _state.copyWith(phase: RecorderPhase.paused, hasSpeechInFlight: false),
     );
+
+    final StreamSubscription<SttEvent>? closing = _subscription;
+    _subscription = null;
+    await closing?.cancel();
+    await _stt.stop();
   }
 
   /// Resumes a paused session into the same transcript.
@@ -359,6 +366,10 @@ final class SessionRecorder {
 
   void _onEvent(SttEvent event) {
     if (_disposed) return;
+    // A paused session accepts nothing from the recogniser. The subscription
+    // is cancelled on pause, but cancellation settles a turn or two later and
+    // words spoken in that gap must not land in the transcript.
+    if (_state.phase == RecorderPhase.paused) return;
     switch (event) {
       case SttPartial(:final String text):
         // Consumed and dropped. Interim text never reaches the transcript.

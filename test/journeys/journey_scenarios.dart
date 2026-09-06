@@ -260,6 +260,21 @@ void registerJourneyTests() {
     );
     recorderStt.emit(const SttReconnected());
     await advance(tester);
+
+    // A break in the middle, which every meeting this mode is named for has.
+    await tester.tap(find.text(strings(StringKey.proPause)));
+    await advance(tester);
+    expect(find.text(strings(StringKey.proPaused)), findsOneWidget);
+    // What was already said survives the break.
+    expect(
+      find.textContaining('the budget is approved', findRichText: true),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text(strings(StringKey.proResume)));
+    await advance(tester);
+    expect(find.text(strings(StringKey.proRecording)), findsOneWidget);
+
     recorderStt.finalResult('Sana will send the notes');
     await advance(tester);
 
