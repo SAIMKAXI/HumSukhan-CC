@@ -82,3 +82,18 @@ jobs:
           apk=build/app/outputs/flutter-apk/app-debug.apk
           test -s "$apk" || { echo "::error::$apk is missing or empty"; exit 1; }
           echo "built $(du -h "$apk" | cut -f1)"
+
+      # Kept rather than discarded. A build that proves it compiles and is then
+      # thrown away cannot be installed on a phone, and "does it actually run?"
+      # is the one question the whole suite cannot answer.
+      #
+      # Debug-signed and debug-compiled: fine for sideloading and trying the
+      # app, wrong for distribution. A real release comes from the tag-driven
+      # Release workflow, which refuses to publish anything debug-signed.
+      - name: Keep the APK so it can be installed
+        uses: actions/upload-artifact@v4
+        with:
+          name: humsukhan-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14

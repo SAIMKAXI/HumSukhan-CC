@@ -1,3 +1,8 @@
+// Imported rather than written as `java.util.Properties`: inside `android { }`
+// the name `java` resolves to Gradle's own java extension, not the package, so
+// the qualified form does not compile.
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -36,14 +41,18 @@ android {
     // workflow fails loudly rather than shipping a debug-signed APK.
     signingConfigs {
         create("release") {
-            val properties = java.util.Properties()
-            val file = rootProject.file("key.properties")
-            if (file.exists()) {
-                file.inputStream().use { properties.load(it) }
-                storeFile = properties.getProperty("storeFile")?.let { file(it) }
-                storePassword = properties.getProperty("storePassword")
-                keyAlias = properties.getProperty("keyAlias")
-                keyPassword = properties.getProperty("keyPassword")
+            val keystore = Properties()
+            // Not named `file`: that would shadow Gradle's `file()` below, and
+            // the store path has to stay relative to this project so
+            // `../upload-keystore.jks` lands in android/ as the workflows write
+            // it.
+            val keystoreFile = rootProject.file("key.properties")
+            if (keystoreFile.exists()) {
+                keystoreFile.inputStream().use { keystore.load(it) }
+                storeFile = keystore.getProperty("storeFile")?.let { file(it) }
+                storePassword = keystore.getProperty("storePassword")
+                keyAlias = keystore.getProperty("keyAlias")
+                keyPassword = keystore.getProperty("keyPassword")
             }
         }
     }
