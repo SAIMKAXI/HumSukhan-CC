@@ -10,6 +10,7 @@ import 'package:humsukhan/domain/environment/alert_presenter_port.dart';
 import 'package:humsukhan/domain/environment/detection_policy.dart';
 import 'package:humsukhan/domain/environment/detector_port.dart';
 import 'package:humsukhan/domain/environment/model_state.dart';
+import 'package:humsukhan/domain/environment/quick_tile_port.dart';
 import 'package:humsukhan/domain/environment/sound_event.dart';
 import 'package:humsukhan/domain/professional/insight.dart';
 import 'package:humsukhan/domain/professional/insight_port.dart';
@@ -184,6 +185,43 @@ final class RecordingAlertPresenter implements AlertPresenterPort {
     this.channels.add(channels);
     if (throwOnPresent) throw StateError('vibration failed');
   }
+}
+
+/// Records what the Quick Settings tile was told.
+final class RecordingQuickTile implements QuickTilePort {
+  /// Creates a recording tile.
+  RecordingQuickTile();
+
+  /// Every state published, in order.
+  final List<bool> published = <bool>[];
+
+  /// What [consumePendingRequest] should return once.
+  bool pending = false;
+
+  final StreamController<void> _requests = StreamController<void>.broadcast();
+
+  @override
+  Future<bool> consumePendingRequest() async {
+    final bool requested = pending;
+    pending = false;
+    return requested;
+  }
+
+  @override
+  Stream<void> get requests => _requests.stream;
+
+  @override
+  Future<void> publishActive({required bool active}) async {
+    published.add(active);
+  }
+
+  /// Raises a tile request.
+  void request() {
+    if (!_requests.isClosed) _requests.add(null);
+  }
+
+  /// Closes the request stream.
+  Future<void> dispose() => _requests.close();
 }
 
 /// An auth port under the test's control.

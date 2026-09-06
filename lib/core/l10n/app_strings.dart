@@ -679,6 +679,21 @@ enum StringKey {
   /// `Nothing here yet`
   stateEmptyTitle,
 
+  /// `Spoken replies`
+  setVoiceAvailability,
+
+  /// `{language} can be spoken on this device`
+  setVoiceReady,
+
+  /// `{language} is spoken using the server`
+  setVoiceCloud,
+
+  /// `No {language} voice on this device`
+  setVoiceMissing,
+
+  /// `Checking which voices are installed…`
+  setVoiceChecking,
+
   /// `No alert channel is on. You will not be told about any sound.`
   setNoAlertChannels,
 
@@ -922,6 +937,11 @@ const Map<StringKey, String> _english = <StringKey, String>{
   StringKey.stateLoadingTitle: 'Loading',
   StringKey.stateErrorTitle: 'That did not work',
   StringKey.stateEmptyTitle: 'Nothing here yet',
+  StringKey.setVoiceAvailability: 'Spoken replies',
+  StringKey.setVoiceReady: '{language} can be spoken on this device',
+  StringKey.setVoiceCloud: '{language} is spoken using the server',
+  StringKey.setVoiceMissing: 'No {language} voice on this device',
+  StringKey.setVoiceChecking: 'Checking which voices are installed…',
   StringKey.setNoAlertChannels:
       'No alert channel is on. You will not be told about any sound.',
   StringKey.envNotificationTitle: 'Listening for important sounds',
@@ -1162,6 +1182,11 @@ const Map<StringKey, String> _urdu = <StringKey, String>{
   StringKey.stateLoadingTitle: 'لوڈ ہو رہا ہے',
   StringKey.stateErrorTitle: 'یہ کام نہیں کر سکا',
   StringKey.stateEmptyTitle: 'ابھی یہاں کچھ نہیں',
+  StringKey.setVoiceAvailability: 'بولے گئے جواب',
+  StringKey.setVoiceReady: 'اس ڈیوائس پر {language} بولی جا سکتی ہے',
+  StringKey.setVoiceCloud: '{language} سرور کے ذریعے بولی جاتی ہے',
+  StringKey.setVoiceMissing: 'اس ڈیوائس پر {language} کی کوئی آواز نہیں',
+  StringKey.setVoiceChecking: 'دیکھا جا رہا ہے کہ کون سی آوازیں نصب ہیں…',
   StringKey.setNoAlertChannels:
       'کوئی اطلاعی ذریعہ آن نہیں۔ آپ کو کسی آواز کی خبر نہیں دی جائے گی۔',
   StringKey.envNotificationTitle: 'اہم آوازوں پر نظر ہے',

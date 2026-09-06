@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:humsukhan/application/account/auth_controller.dart';
 import 'package:humsukhan/application/common/operation_state.dart';
+import 'package:humsukhan/application/common/retention_sweeper.dart';
 import 'package:humsukhan/application/conversation/conversation_session.dart';
 import 'package:humsukhan/application/conversation/conversation_session_state.dart';
 import 'package:humsukhan/application/environment/monitoring_controller.dart';
@@ -264,6 +265,31 @@ final Provider<AppThemeVariant> themeVariantProvider =
       if (settings.highContrast) return AppThemeVariant.highContrast;
       return settings.darkMode ? AppThemeVariant.dark : AppThemeVariant.light;
     });
+
+/// Whether this device can speak each language.
+///
+/// Asked, and shown, rather than discovered when the user taps Speak: "no Urdu
+/// voice on this device" is worth knowing before you rely on it
+/// (docs/instructions.md §1.3).
+final FutureProvider<Map<LanguageTag, Capability>> voiceCapabilityProvider =
+    FutureProvider<Map<LanguageTag, Capability>>((Ref ref) async {
+      final SpeechCapabilityPort port = ref.watch(capabilityProvider);
+      return <LanguageTag, Capability>{
+        for (final LanguageTag tag in LanguageTag.values)
+          tag: await port.tts(tag),
+      };
+    });
+
+/// Deletes anything past its retention window.
+final Provider<RetentionSweeper> retentionSweeperProvider =
+    Provider<RetentionSweeper>(
+      (Ref ref) => RetentionSweeper(
+        conversations: ref.watch(conversationRepositoryProvider),
+        sessions: ref.watch(sessionRepositoryProvider),
+        clock: ref.watch(clockProvider),
+        logger: ref.watch(loggerProvider),
+      ),
+    );
 
 // ---- conversation -------------------------------------------------------
 

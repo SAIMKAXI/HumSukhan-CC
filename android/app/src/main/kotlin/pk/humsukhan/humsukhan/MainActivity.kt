@@ -31,6 +31,19 @@ class MainActivity : FlutterActivity() {
                         pendingToggle = false
                         result.success(requested)
                     }
+                    // Written here rather than from Dart's own storage so both
+                    // sides read the same file with the same encoding.
+                    "publishActive" -> {
+                        val active = call.arguments as? Boolean ?: false
+                        getSharedPreferences(
+                            MonitoringTileService.PREFS,
+                            MODE_PRIVATE,
+                        ).edit()
+                            .putBoolean(MonitoringTileService.KEY_ACTIVE, active)
+                            .apply()
+                        MonitoringTileService.refreshTile(this)
+                        result.success(null)
+                    }
                     else -> result.notImplemented()
                 }
             }

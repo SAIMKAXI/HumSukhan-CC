@@ -54,3 +54,5 @@ its own tests before release. Each has a test that fails without its fix.
 | The alert card's dismiss button drew but did not respond | Journey 3 | `environment_screen_test.dart` |
 | Both Settings language rows threw at phone width | Journey 1 | `journey_scenarios.dart` |
 | `WindowBuffer` emitted the same 3-second slice repeatedly | `window_buffer_test.dart` while it was being written | `window_buffer_test.dart` |
+| The Quick Settings tile never learned monitoring had started, so it always read "off" | the final audit for unused wiring | `monitoring_controller_test.dart` |
+| Retention was a countdown nothing enforced on the device | the same audit | `retention_sweeper_test.dart` |

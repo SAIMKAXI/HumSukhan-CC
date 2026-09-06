@@ -10,6 +10,7 @@ import 'package:humsukhan/domain/environment/detection_policy.dart';
 import 'package:humsukhan/domain/environment/detector_port.dart';
 import 'package:humsukhan/domain/environment/model_state.dart';
 import 'package:humsukhan/domain/environment/monitoring_service_port.dart';
+import 'package:humsukhan/domain/environment/quick_tile_port.dart';
 import 'package:humsukhan/domain/environment/sound_event.dart';
 import 'package:humsukhan/domain/settings/app_settings.dart';
 
@@ -82,6 +83,7 @@ final class MonitoringController {
     required AlertPresenterPort presenter,
     required IdGenerator ids,
     MonitoringServicePort? service,
+    QuickTilePort? tile,
     required Clock clock,
     DetectionPolicy policy = const DetectionPolicy(),
     AppLogger logger = const SilentLogger(),
@@ -91,6 +93,7 @@ final class MonitoringController {
        _presenter = presenter,
        _ids = ids,
        _service = service,
+       _tile = tile,
        _clock = clock,
        _policy = policy,
        _logger = logger,
@@ -100,6 +103,7 @@ final class MonitoringController {
   final ModelRepositoryPort _models;
   final AlertPresenterPort _presenter;
   final MonitoringServicePort? _service;
+  final QuickTilePort? _tile;
   final IdGenerator _ids;
   final Clock _clock;
   final DetectionPolicy _policy;
@@ -243,6 +247,7 @@ final class MonitoringController {
         _emit(
           _state.copyWith(phase: MonitoringPhase.active, clearFailure: true),
         );
+        unawaited(_publish(active: true));
         return const Ok<Unit, Failure>(unit);
       },
       (DetectorFailure failure) {
@@ -259,6 +264,7 @@ final class MonitoringController {
     _startInFlight = false;
     await _detector.stop();
     await _service?.stop();
+    await _publish(active: false);
     if (_disposed) return;
     _emit(_state.copyWith(phase: MonitoringPhase.off, clearFailure: true));
   }
@@ -358,10 +364,22 @@ final class MonitoringController {
     );
   }
 
+  /// Tells the Quick Settings tile what the app is actually doing.
+  ///
+  /// The tile cannot ask, so an unpublished state means a tile that disagrees
+  /// with the app — and a user who thinks they are being listened for when
+  /// they are not.
+  Future<void> _publish({required bool active}) async {
+    final QuickTilePort? tile = _tile;
+    if (tile == null) return;
+    await tile.publishActive(active: active);
+  }
+
   void _fail(Failure failure) {
     if (_disposed) return;
     _logger.log(LogLevel.warning, 'monitoring', 'monitoring failed: $failure');
     _startInFlight = false;
+    unawaited(_publish(active: false));
     _emit(_state.copyWith(phase: MonitoringPhase.failed, failure: failure));
   }
 

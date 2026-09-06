@@ -9,7 +9,9 @@ import 'package:humsukhan/core/l10n/app_strings.dart';
 import 'package:humsukhan/core/theme/app_tokens.dart';
 import 'package:humsukhan/domain/account/account.dart';
 import 'package:humsukhan/domain/conversation/turn_policy.dart';
+import 'package:humsukhan/core/failure/failure.dart';
 import 'package:humsukhan/domain/environment/model_state.dart';
+import 'package:humsukhan/domain/speech/capability.dart';
 import 'package:humsukhan/domain/professional/retention_policy.dart';
 import 'package:humsukhan/domain/settings/app_settings.dart';
 import 'package:humsukhan/domain/speech/language_tag.dart';
@@ -235,6 +237,9 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
 
+          SectionHeader(strings(StringKey.setVoiceAvailability)),
+          const _VoiceAvailability(),
+
           SectionHeader(strings(StringKey.setOfflineModels)),
           _ModelTile(strings: strings),
 
@@ -350,6 +355,71 @@ class _ChoiceRow extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// What this device can actually say, per language.
+class _VoiceAvailability extends ConsumerWidget {
+  const _VoiceAvailability();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AppStrings strings = ref.watch(stringsProvider);
+    final AsyncValue<Map<LanguageTag, Capability>> capabilities = ref.watch(
+      voiceCapabilityProvider,
+    );
+
+    return capabilities.when(
+      loading: () => ListTile(
+        leading: const SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+        title: Text(strings(StringKey.setVoiceChecking)),
+      ),
+      // A probe that fails is reported, not hidden: the user would otherwise
+      // meet the same answer later, as a button that did nothing.
+      error: (Object error, StackTrace stackTrace) => ListTile(
+        leading: const Icon(Icons.error_outline),
+        title: Text(strings.failureMessage(FailureCode.ttsUnavailable)),
+        subtitle: Text(strings.failureRemedy(FailureCode.ttsUnavailable) ?? ''),
+      ),
+      data: (Map<LanguageTag, Capability> answers) => Column(
+        children: answers.entries
+            .map((MapEntry<LanguageTag, Capability> entry) {
+              final String language = strings(
+                entry.key == LanguageTag.urdu
+                    ? StringKey.setLanguageUrdu
+                    : StringKey.setLanguageEnglish,
+              );
+              final (IconData icon, StringKey key) = switch (entry.value) {
+                CapabilityAvailable(locale: 'cloud') => (
+                  Icons.cloud_done_outlined,
+                  StringKey.setVoiceCloud,
+                ),
+                CapabilityAvailable() => (
+                  Icons.check_circle_outline,
+                  StringKey.setVoiceReady,
+                ),
+                _ => (Icons.volume_off_outlined, StringKey.setVoiceMissing),
+              };
+              return ListTile(
+                leading: Icon(icon),
+                title: Text(
+                  strings.format(key, <String, String>{'language': language}),
+                ),
+                subtitle: entry.value is CapabilityUnavailable
+                    ? Text(
+                        strings.failureRemedy(FailureCode.ttsVoiceMissing) ??
+                            '',
+                      )
+                    : null,
+              );
+            })
+            .toList(growable: false),
+      ),
+    );
+  }
 }
 
 class _ModelTile extends ConsumerWidget {

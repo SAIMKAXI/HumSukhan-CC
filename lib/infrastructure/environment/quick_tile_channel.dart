@@ -51,9 +51,22 @@ final class QuickTileChannel implements QuickTilePort {
 
   @override
   Future<void> publishActive({required bool active}) async {
-    // The tile reads this straight out of the shared-preferences file, so
-    // publishing is just a write the settings store already performs.
-    _logger.log(LogLevel.debug, 'tile', 'monitoring active: $active');
+    // Written through the same channel the tile reads from, rather than through
+    // shared_preferences: the two sides would otherwise have to agree on a
+    // storage backend and a value encoding, and a tile that always reads "off"
+    // is worse than no tile.
+    try {
+      await _channel.invokeMethod<void>('publishActive', active);
+    } on MissingPluginException {
+      _logger.log(LogLevel.debug, 'tile', 'no quick tile on this platform');
+    } on PlatformException catch (error) {
+      _logger.log(
+        LogLevel.warning,
+        'tile',
+        'could not publish the monitoring state',
+        error: error,
+      );
+    }
   }
 
   /// Closes the request stream.

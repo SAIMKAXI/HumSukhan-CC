@@ -53,21 +53,32 @@ class MonitoringTileService : TileService() {
 
     private fun refresh() {
         val tile: Tile = qsTile ?: return
-        val active = getSharedPreferences(FLUTTER_PREFS, MODE_PRIVATE)
-            .getBoolean(KEY_MONITORING_ACTIVE, false)
+        val active = getSharedPreferences(PREFS, MODE_PRIVATE)
+            .getBoolean(KEY_ACTIVE, false)
         tile.state = if (active) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
         tile.label = getString(R.string.monitoring_tile_label)
         tile.updateTile()
     }
 
     companion object {
-        /** Where `shared_preferences` stores Flutter values on Android. */
-        private const val FLUTTER_PREFS = "FlutterSharedPreferences"
+        /** The app's own preference file, written by MainActivity. */
+        const val PREFS = "humsukhan_tile"
 
-        /** Written by Dart whenever monitoring starts or stops. */
-        private const val KEY_MONITORING_ACTIVE = "flutter.humsukhan.monitoring_active"
+        /** Whether monitoring is running, as the app last reported it. */
+        const val KEY_ACTIVE = "monitoring_active"
 
         /** Set on the launch intent when the tile asked for a toggle. */
         const val EXTRA_TOGGLE_MONITORING = "humsukhan.toggle_monitoring"
+
+        /** Asks the platform to re-read the tile's state. */
+        fun refreshTile(context: android.content.Context) {
+            requestListeningState(
+                context,
+                android.content.ComponentName(
+                    context,
+                    MonitoringTileService::class.java,
+                ),
+            )
+        }
     }
 }

@@ -5,10 +5,14 @@ import 'package:humsukhan/application/providers.dart';
 import 'package:humsukhan/core/l10n/app_language.dart';
 import 'package:humsukhan/core/l10n/app_strings.dart';
 import 'package:humsukhan/core/theme/app_theme.dart';
+import 'package:humsukhan/core/failure/failure.dart';
 import 'package:humsukhan/domain/settings/app_settings.dart';
+import 'package:humsukhan/domain/speech/capability.dart';
+import 'package:humsukhan/domain/speech/language_tag.dart';
 import 'package:humsukhan/features/settings/settings_screen.dart';
 
 import '../../fakes/fake_app_ports.dart';
+import '../../fakes/fake_speech_ports.dart';
 import '../../support/harness.dart';
 
 void main() {
@@ -179,6 +183,67 @@ void main() {
       );
       expect(find.textContaining('15 days'), findsOneWidget);
       expect(find.textContaining('30 days'), findsNothing);
+    });
+  });
+
+  group('voice availability is stated before it is needed', () {
+    testWidgets('a language with no voice says so, with the remedy', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        harness(
+          child: const SettingsScreen(),
+          capability: FakeCapabilityPort(
+            ttsAnswers: <LanguageTag, Capability>{
+              LanguageTag.english: const CapabilityAvailable(),
+              LanguageTag.urdu: const CapabilityUnavailable(
+                FailureCode.ttsVoiceMissing,
+              ),
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final Finder missing = find.textContaining('No Urdu voice');
+      await tester.scrollUntilVisible(
+        missing,
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(missing, findsOneWidget);
+      expect(
+        find.textContaining(
+          english.failureRemedy(FailureCode.ttsVoiceMissing)!,
+        ),
+        findsOneWidget,
+        reason: 'an honest "not installed" needs to say how to install it',
+      );
+    });
+
+    testWidgets('a language served by the cloud says which route it takes', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        harness(
+          child: const SettingsScreen(),
+          capability: FakeCapabilityPort(
+            ttsAnswers: <LanguageTag, Capability>{
+              LanguageTag.english: const CapabilityAvailable(),
+              LanguageTag.urdu: const CapabilityAvailable(locale: 'cloud'),
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final Finder cloud = find.textContaining('using the server');
+      await tester.scrollUntilVisible(
+        cloud,
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(cloud, findsOneWidget);
     });
   });
 

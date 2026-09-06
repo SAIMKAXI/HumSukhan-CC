@@ -15,6 +15,7 @@ void main() {
   late FakeModelRepository models;
   late RecordingAlertPresenter presenter;
   late FakeClock clock;
+  late RecordingQuickTile tile;
   late MonitoringController controller;
 
   setUp(() {
@@ -22,16 +23,19 @@ void main() {
     models = FakeModelRepository();
     presenter = RecordingAlertPresenter();
     clock = FakeClock();
+    tile = RecordingQuickTile();
     controller = MonitoringController(
       detector: detector,
       models: models,
       presenter: presenter,
+      tile: tile,
       ids: FakeIdGenerator(prefix: 'e'),
       clock: clock,
     );
   });
 
   tearDown(() async {
+    await tile.dispose();
     await controller.dispose();
     await detector.dispose();
     await models.dispose();
@@ -228,6 +232,37 @@ void main() {
 
       expect(controller.state.events, isEmpty);
     });
+  });
+
+  group('the Quick Settings tile is told the truth', () {
+    test('starting publishes that monitoring is on', () async {
+      await controller.start();
+      expect(tile.published, <bool>[true]);
+    });
+
+    test('stopping publishes that it is off', () async {
+      await controller.start();
+      await controller.stop();
+      expect(tile.published, <bool>[true, false]);
+    });
+
+    test(
+      'a failure publishes off, so the tile never claims protection',
+      () async {
+        detector.failOnStart = const DetectorFailure(
+          FailureCode.microphoneUnavailable,
+        );
+
+        await controller.start();
+
+        expect(
+          tile.published,
+          contains(false),
+          reason: 'a tile showing "on" while nothing is listening is a lie',
+        );
+        expect(tile.published, isNot(contains(true)));
+      },
+    );
   });
 
   group('stopping', () {
