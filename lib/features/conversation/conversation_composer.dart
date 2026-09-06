@@ -55,6 +55,7 @@ class ConversationComposer extends StatefulWidget {
 class _ConversationComposerState extends State<ConversationComposer> {
   final TextEditingController _controller = TextEditingController();
   ReadingDirection _direction = ReadingDirection.leftToRight;
+  bool _hasText = false;
 
   @override
   void initState() {
@@ -71,10 +72,19 @@ class _ConversationComposerState extends State<ConversationComposer> {
   }
 
   void _onChanged() {
-    final ReadingDirection next = LanguagePolicy.dominantDirection(
+    final ReadingDirection direction = LanguagePolicy.dominantDirection(
       _controller.text,
     );
-    if (next != _direction) setState(() => _direction = next);
+    final bool hasText = _controller.text.trim().isNotEmpty;
+    // Both matter: the direction decides the font and the caret, and whether
+    // there is anything to send decides whether the buttons work at all. A
+    // rebuild driven by direction alone leaves Send disabled while the user
+    // types English — a control that looks live and does nothing.
+    if (direction == _direction && hasText == _hasText) return;
+    setState(() {
+      _direction = direction;
+      _hasText = hasText;
+    });
   }
 
   void _submit(ValueChanged<String> action) {
@@ -82,13 +92,16 @@ class _ConversationComposerState extends State<ConversationComposer> {
     if (text.isEmpty) return;
     action(text);
     _controller.clear();
+    // clear() notifies, but state the result explicitly rather than relying on
+    // the listener ordering.
+    if (mounted) setState(() => _hasText = false);
   }
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final bool rtl = _direction == ReadingDirection.rightToLeft;
-    final bool hasText = _controller.text.trim().isNotEmpty;
+    final bool hasText = _hasText;
     final bool enabled = !widget.locked;
 
     return Container(

@@ -202,7 +202,7 @@ class SettingsScreen extends ConsumerWidget {
               child: Text(
                 // Turning every channel off means no alert can reach the user
                 // at all. Say so rather than let it happen quietly.
-                strings(StringKey.envNoAlerts),
+                strings(StringKey.setNoAlertChannels),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.error,
                 ),

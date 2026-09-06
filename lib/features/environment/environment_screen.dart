@@ -22,13 +22,16 @@ class EnvironmentScreen extends ConsumerWidget {
       _toggle(ref, on);
 
   static Future<void> _toggle(WidgetRef ref, bool on) async {
-    final MonitoringController controller = ref
-        .read(monitoringProvider.notifier)
-        .controller;
     await ref
         .read(settingsControllerProvider.notifier)
         .controller
         .setMonitoringEnabled(on);
+    // Read the controller *after* the write, never before: holding a reference
+    // across an await is how a command ends up talking to an object the
+    // container has already replaced.
+    final MonitoringController controller = ref
+        .read(monitoringProvider.notifier)
+        .controller;
     if (on) {
       final AppStrings strings = ref.read(stringsProvider);
       // The failure is rendered by the banner below; nothing is swallowed.

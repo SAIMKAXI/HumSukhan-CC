@@ -27,6 +27,10 @@ final class SettingsController {
   OperationState<AppSettings> _state = const OperationIdle<AppSettings>();
   bool _disposed = false;
 
+  /// Bumped by every state-changing command. A load that completes after the
+  /// user has already changed something must not overwrite their choice.
+  int _generation = 0;
+
   /// The load state right now.
   OperationState<AppSettings> get state => _state;
 
@@ -37,11 +41,16 @@ final class SettingsController {
   AppSettings get settings => _state.valueOrNull ?? const AppSettings();
 
   /// Loads the stored settings.
+  ///
+  /// A change made while this is in flight wins: the user's action is newer
+  /// than the disk, and silently reverting it would be a setting that appears
+  /// to take and then does not.
   Future<void> load() async {
     if (_disposed) return;
+    final int generation = ++_generation;
     _emit(const OperationLoading<AppSettings>());
     final Result<AppSettings, StorageFailure> result = await _port.load();
-    if (_disposed) return;
+    if (_disposed || generation != _generation) return;
     _emit(
       result.fold(
         OperationSuccess<AppSettings>.new,
@@ -58,7 +67,9 @@ final class SettingsController {
       );
     }
     // Optimistic: the UI reflects the choice immediately, and a write failure
-    // surfaces rather than silently reverting.
+    // surfaces rather than silently reverting. Bumping the generation also
+    // makes an in-flight load stale, so it cannot undo this.
+    _generation++;
     _emit(OperationSuccess<AppSettings>(next));
     return _port.save(next);
   }

@@ -18,6 +18,7 @@ import 'package:humsukhan/core/time/clock.dart';
 import 'package:humsukhan/domain/account/account.dart';
 import 'package:humsukhan/domain/account/auth_port.dart';
 import 'package:humsukhan/domain/conversation/conversation_repository_port.dart';
+import 'package:humsukhan/domain/conversation/turn_policy.dart';
 import 'package:humsukhan/domain/environment/alert_presenter_port.dart';
 import 'package:humsukhan/domain/environment/detector_port.dart';
 import 'package:humsukhan/domain/environment/model_state.dart';
@@ -30,6 +31,7 @@ import 'package:humsukhan/domain/professional/session_repository_port.dart';
 import 'package:humsukhan/domain/settings/app_settings.dart';
 import 'package:humsukhan/domain/settings/settings_port.dart';
 import 'package:humsukhan/domain/speech/capability.dart';
+import 'package:humsukhan/domain/speech/language_tag.dart';
 import 'package:humsukhan/domain/speech/stt_port.dart';
 import 'package:humsukhan/domain/speech/tts_port.dart';
 
@@ -237,6 +239,22 @@ final Provider<AppStrings> stringsProvider = Provider<AppStrings>(
   (Ref ref) => AppStrings.of(ref.watch(appLanguageProvider)),
 );
 
+/// The pause rule in force.
+final Provider<PauseThreshold> pauseThresholdProvider =
+    Provider<PauseThreshold>(
+      (Ref ref) => ref.watch(settingsProvider).pauseThreshold,
+    );
+
+/// The recognition language in force.
+final Provider<LanguageTag> captionLanguageProvider = Provider<LanguageTag>(
+  (Ref ref) => ref.watch(settingsProvider).captionLanguage,
+);
+
+/// The alert channels in force.
+final Provider<AlertChannels> alertChannelsProvider = Provider<AlertChannels>(
+  (Ref ref) => ref.watch(settingsProvider).alertChannels,
+);
+
 /// Which of the three themes is in force.
 final Provider<AppThemeVariant> themeVariantProvider =
     Provider<AppThemeVariant>((Ref ref) {
@@ -265,7 +283,12 @@ final class ConversationNotifier extends Notifier<ConversationSessionState> {
 
   @override
   ConversationSessionState build() {
-    final AppSettings settings = ref.watch(settingsProvider);
+    // Settings are *read*, not watched. Watching them would rebuild this
+    // notifier — disposing the live session — every time the user changed the
+    // theme or any other preference. A conversation in progress must survive
+    // every setting change, so the two values the session cares about are
+    // pushed into it below instead.
+    final AppSettings settings = ref.read(settingsProvider);
     final ConversationSession session = ConversationSession(
       stt: ref.watch(conversationSttProvider),
       tts: ref.watch(ttsPortProvider),
@@ -276,6 +299,15 @@ final class ConversationNotifier extends Notifier<ConversationSessionState> {
       logger: ref.watch(loggerProvider),
     )..bindTtsActivity();
     _session = session;
+
+    ref.listen<PauseThreshold>(
+      pauseThresholdProvider,
+      (PauseThreshold? _, PauseThreshold next) => session.setThreshold(next),
+    );
+    ref.listen<LanguageTag>(
+      captionLanguageProvider,
+      (LanguageTag? _, LanguageTag next) => session.setCaptionLanguage(next),
+    );
 
     final StreamSubscription<ConversationSessionState> subscription = session
         .states
@@ -375,8 +407,17 @@ final class MonitoringNotifier extends Notifier<MonitoringState> {
       ids: ref.watch(idGeneratorProvider),
       clock: ref.watch(clockProvider),
       logger: ref.watch(loggerProvider),
-    )..setChannels(ref.watch(settingsProvider).alertChannels);
+    )..setChannels(ref.read(alertChannelsProvider));
     _controller = controller;
+
+    // Same reasoning as the conversation session: watching settings here would
+    // tear down a running monitor the moment any setting changed — including
+    // the "monitoring enabled" flag the toggle itself writes, which made the
+    // toggle appear to do nothing at all.
+    ref.listen<AlertChannels>(
+      alertChannelsProvider,
+      (AlertChannels? _, AlertChannels next) => controller.setChannels(next),
+    );
 
     final StreamSubscription<MonitoringState> subscription = controller.states
         .listen((MonitoringState next) => state = next);

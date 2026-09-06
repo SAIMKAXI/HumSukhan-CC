@@ -682,6 +682,9 @@ enum StringKey {
   /// `Nothing here yet`
   stateEmptyTitle,
 
+  /// `No alert channel is on. You will not be told about any sound.`
+  setNoAlertChannels,
+
   /// `Listening for important sounds`
   envNotificationTitle,
 
@@ -923,6 +926,8 @@ const Map<StringKey, String> _english = <StringKey, String>{
   StringKey.stateLoadingTitle: 'Loading',
   StringKey.stateErrorTitle: 'That did not work',
   StringKey.stateEmptyTitle: 'Nothing here yet',
+  StringKey.setNoAlertChannels:
+      'No alert channel is on. You will not be told about any sound.',
   StringKey.envNotificationTitle: 'Listening for important sounds',
   StringKey.envNotificationBody:
       'Doorbell, siren, alarm and more. Audio stays on this device.',
@@ -1162,6 +1167,8 @@ const Map<StringKey, String> _urdu = <StringKey, String>{
   StringKey.stateLoadingTitle: 'لوڈ ہو رہا ہے',
   StringKey.stateErrorTitle: 'یہ کام نہیں کر سکا',
   StringKey.stateEmptyTitle: 'ابھی یہاں کچھ نہیں',
+  StringKey.setNoAlertChannels:
+      'کوئی اطلاعی ذریعہ آن نہیں۔ آپ کو کسی آواز کی خبر نہیں دی جائے گی۔',
   StringKey.envNotificationTitle: 'اہم آوازوں پر نظر ہے',
   StringKey.envNotificationBody:
       'دروازے کی گھنٹی، سائرن، الارم اور مزید۔ آواز اسی ڈیوائس پر رہتی ہے۔',

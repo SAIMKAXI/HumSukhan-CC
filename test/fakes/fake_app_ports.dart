@@ -395,8 +395,12 @@ final class FakeSessionRepository implements SessionRepositoryPort {
   /// When set, every call fails with this.
   StorageFailure? failure;
 
+  /// How long [list] takes, so a test can assert on the loading state.
+  Duration delay = Duration.zero;
+
   @override
   Future<Result<List<ProfessionalSession>, StorageFailure>> list() async {
+    if (delay > Duration.zero) await Future<void>.delayed(delay);
     final StorageFailure? f = failure;
     if (f != null) return Err<List<ProfessionalSession>, StorageFailure>(f);
     return Ok<List<ProfessionalSession>, StorageFailure>(
