@@ -27,6 +27,16 @@ enum RecorderPhase {
   /// The transport dropped; the adapter is restoring it. Capture resumes.
   reconnecting,
 
+  /// The user paused. The microphone is released and the transcript is kept.
+  ///
+  /// Distinct from [stopped]: a paused session is still open and will carry on
+  /// into the same transcript, which is the whole point of pausing a lecture
+  /// for a coffee break rather than ending it.
+  paused,
+
+  /// Resuming from [paused] and not yet capturing.
+  resuming,
+
   /// Recording stopped because something went wrong.
   failed,
 
@@ -68,7 +78,20 @@ final class RecorderState {
   bool get isRecording =>
       phase == RecorderPhase.starting ||
       phase == RecorderPhase.recording ||
-      phase == RecorderPhase.reconnecting;
+      phase == RecorderPhase.reconnecting ||
+      phase == RecorderPhase.resuming;
+
+  /// Whether the session is open — recording or merely paused.
+  ///
+  /// The test for "is there a session in progress"; [isRecording] is the
+  /// narrower test for "is the microphone live".
+  bool get isActive => isRecording || phase == RecorderPhase.paused;
+
+  /// Whether pausing is offered right now.
+  bool get canPause => phase == RecorderPhase.recording;
+
+  /// Whether resuming is offered right now.
+  bool get canResume => phase == RecorderPhase.paused;
 
   /// A copy with the given fields replaced.
   RecorderState copyWith({
@@ -115,6 +138,8 @@ final class SessionRecorder {
   StreamSubscription<SttEvent>? _subscription;
   bool _startInFlight = false;
   bool _stopRequested = false;
+  DateTime? _pausedAt;
+  Duration _pausedFor = Duration.zero;
   bool _disposed = false;
   int _generation = 0;
 
@@ -152,6 +177,8 @@ final class SessionRecorder {
     _startInFlight = true;
     final int generation = ++_generation;
     _stopRequested = false;
+    _pausedAt = null;
+    _pausedFor = Duration.zero;
 
     final ProfessionalSession session = ProfessionalSession(
       id: _ids.next(),
@@ -204,9 +231,74 @@ final class SessionRecorder {
     );
   }
 
+  /// Pauses capture, keeping the session and its transcript open.
+  ///
+  /// The microphone is released, so a long break does not hold the device's
+  /// recogniser open — but nothing is finalised and nothing is lost. Time spent
+  /// paused is not counted towards the session's length, because a two-hour
+  /// reading of a session that was recorded for forty minutes is simply wrong.
+  Future<void> pause() async {
+    if (_disposed || !_state.canPause) return;
+    // Bumping the generation stops a late transport event from moving the
+    // phase back to recording behind the user's decision.
+    _generation++;
+    _pausedAt = _clock.now();
+    await _subscription?.cancel();
+    _subscription = null;
+    await _stt.stop();
+    if (_disposed) return;
+    _emit(
+      _state.copyWith(phase: RecorderPhase.paused, hasSpeechInFlight: false),
+    );
+  }
+
+  /// Resumes a paused session into the same transcript.
+  Future<Result<Unit, SttFailure>> resume() async {
+    if (_disposed) {
+      return const Err<Unit, SttFailure>(
+        SttFailure(FailureCode.cancelled, isRecoverable: false),
+      );
+    }
+    final ProfessionalSession? session = _state.session;
+    if (!_state.canResume || session == null) {
+      return const Err<Unit, SttFailure>(
+        SttFailure(FailureCode.invalidInput, detail: 'not paused'),
+      );
+    }
+
+    final DateTime? pausedAt = _pausedAt;
+    if (pausedAt != null) {
+      _pausedFor += _clock.now().difference(pausedAt);
+      _pausedAt = null;
+    }
+
+    final int generation = ++_generation;
+    _stopRequested = false;
+    _emit(_state.copyWith(phase: RecorderPhase.resuming, clearFailure: true));
+
+    final Result<ProfessionalSession, SttFailure> outcome =
+        await _openTransport(generation, session, session.language);
+    return outcome.map((ProfessionalSession _) => unit);
+  }
+
+  /// How long this session has actually been recording.
+  ///
+  /// Wall-clock elapsed minus everything spent paused. Read by the screen so
+  /// the readout freezes while paused rather than ticking on through a break.
+  Duration durationAt(DateTime now) {
+    final ProfessionalSession? session = _state.session;
+    if (session == null) return Duration.zero;
+    final DateTime? pausedAt = _pausedAt;
+    final Duration paused = pausedAt == null
+        ? _pausedFor
+        : _pausedFor + now.difference(pausedAt);
+    final Duration elapsed = session.durationAt(now) - paused;
+    return elapsed.isNegative ? Duration.zero : elapsed;
+  }
+
   /// Stops recording, keeping whatever was captured.
   Future<void> stop() async {
-    if (_disposed || !_state.isRecording) return;
+    if (_disposed || !_state.isActive) return;
     _stopRequested = true;
     _generation++;
     _startInFlight = false;
@@ -237,6 +329,8 @@ final class SessionRecorder {
   /// Discards the recording and returns to idle.
   void discard() {
     if (_disposed) return;
+    _pausedAt = null;
+    _pausedFor = Duration.zero;
     _emit(const RecorderState());
   }
 

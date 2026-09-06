@@ -12,14 +12,16 @@ import '../../fakes/fake_speech_ports.dart';
 
 void main() {
   late FakeSttPort stt;
+  late FakeClock clock;
   late SessionRecorder recorder;
 
   setUp(() {
     stt = FakeSttPort();
+    clock = FakeClock();
     recorder = SessionRecorder(
       stt: stt,
       ids: FakeIdGenerator(prefix: 's'),
-      clock: FakeClock(),
+      clock: clock,
     );
   });
 
@@ -205,6 +207,186 @@ void main() {
       await settle();
 
       expect(recorder.state.session!.captions, isEmpty);
+    });
+  });
+
+  group('pausing a long session', () {
+    Future<void> begin() => recorder.start(
+      title: 'Physics lecture',
+      type: SessionType.lecture,
+      language: LanguageTag.english,
+      retentionDays: 7,
+    );
+
+    test(
+      'pausing releases the microphone and keeps the session open',
+      () async {
+        await begin();
+
+        await recorder.pause();
+
+        expect(recorder.state.phase, RecorderPhase.paused);
+        // Still open, so the transcript carries on into the same session — that
+        // is the whole difference between pausing and stopping.
+        expect(recorder.state.isActive, isTrue);
+        expect(recorder.state.session, isNotNull);
+        expect(stt.stopCount, 1);
+      },
+    );
+
+    test('what was already said is kept across a pause', () async {
+      await begin();
+      stt.finalResult('the first half');
+      await Future<void>.delayed(Duration.zero);
+
+      await recorder.pause();
+
+      expect(recorder.state.session!.captions.single.text, 'the first half');
+    });
+
+    test('resuming continues the same transcript, not a new session', () async {
+      await begin();
+      stt.finalResult('before the break');
+      await Future<void>.delayed(Duration.zero);
+      final String id = recorder.state.session!.id;
+
+      await recorder.pause();
+      await recorder.resume();
+      stt.finalResult('after the break');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(recorder.state.phase, RecorderPhase.recording);
+      expect(recorder.state.session!.id, id);
+      expect(
+        recorder.state.session!.captions.map((Caption c) => c.text),
+        <String>['before the break', 'after the break'],
+      );
+    });
+
+    test('time spent paused is not counted as recorded time', () async {
+      await begin();
+      clock.advance(const Duration(minutes: 10));
+
+      await recorder.pause();
+      clock.advance(const Duration(minutes: 30));
+      await recorder.resume();
+      clock.advance(const Duration(minutes: 5));
+
+      // Forty-five minutes of wall clock, fifteen of recording. Reading back a
+      // forty-five minute lecture that was recorded for fifteen is simply
+      // wrong, and the user has no way to tell it is wrong.
+      expect(recorder.durationAt(clock.now()), const Duration(minutes: 15));
+    });
+
+    test('the readout freezes while paused rather than ticking on', () async {
+      await begin();
+      clock.advance(const Duration(minutes: 2));
+      await recorder.pause();
+
+      final Duration atPause = recorder.durationAt(clock.now());
+      clock.advance(const Duration(minutes: 20));
+
+      expect(recorder.durationAt(clock.now()), atPause);
+    });
+
+    test('a late transport event does not undo the pause', () async {
+      await begin();
+      await recorder.pause();
+
+      // The engine reports its own end after we asked it to stop.
+      stt.emit(const SttEnded(SttEndReason.stoppedByUser));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(recorder.state.phase, RecorderPhase.paused);
+    });
+
+    test('speech arriving while paused is not appended', () async {
+      await begin();
+      await recorder.pause();
+
+      stt.finalResult('nobody should hear this');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(recorder.state.session!.captions, isEmpty);
+    });
+
+    test('a note can still be typed during a break', () async {
+      await begin();
+      await recorder.pause();
+
+      recorder.addManualCaption('remember to ask about the deadline');
+
+      expect(recorder.state.session!.captions, hasLength(1));
+    });
+
+    test('stopping from paused finishes the session', () async {
+      await begin();
+      await recorder.pause();
+
+      await recorder.stop();
+
+      expect(recorder.state.phase, RecorderPhase.stopped);
+      expect(recorder.state.session!.endedAt, isNotNull);
+    });
+
+    test('pause and resume are offered only when they would work', () async {
+      expect(recorder.state.canPause, isFalse);
+      expect(recorder.state.canResume, isFalse);
+
+      await begin();
+      expect(recorder.state.canPause, isTrue);
+      expect(recorder.state.canResume, isFalse);
+
+      await recorder.pause();
+      expect(recorder.state.canPause, isFalse);
+      expect(recorder.state.canResume, isTrue);
+    });
+
+    test(
+      'resuming when not paused fails rather than doing something odd',
+      () async {
+        await begin();
+
+        expect((await recorder.resume()).isErr, isTrue);
+        expect(recorder.state.phase, RecorderPhase.recording);
+      },
+    );
+
+    test('pausing when not recording is a no-op', () async {
+      await recorder.pause();
+
+      expect(recorder.state.phase, RecorderPhase.idle);
+      expect(stt.stopCount, 0);
+    });
+
+    test(
+      'a failed resume says so and leaves the session recoverable',
+      () async {
+        await begin();
+        await recorder.pause();
+        stt.failOnStart = const SttFailure(FailureCode.microphoneUnavailable);
+
+        final result = await recorder.resume();
+
+        expect(result.isErr, isTrue);
+        // The transcript is still there to be saved; a failed resume must not
+        // cost the user the half of the lecture they already have.
+        expect(recorder.state.session, isNotNull);
+      },
+    );
+
+    test('a new session clears the previous pause accounting', () async {
+      await begin();
+      clock.advance(const Duration(minutes: 5));
+      await recorder.pause();
+      clock.advance(const Duration(minutes: 20));
+      await recorder.stop();
+
+      recorder.discard();
+      await begin();
+      clock.advance(const Duration(minutes: 3));
+
+      expect(recorder.durationAt(clock.now()), const Duration(minutes: 3));
     });
   });
 }

@@ -11,6 +11,7 @@ import 'package:humsukhan/core/theme/app_tokens.dart';
 import 'package:humsukhan/domain/professional/professional_session.dart';
 import 'package:humsukhan/domain/professional/retention_policy.dart';
 import 'package:humsukhan/domain/speech/language_tag.dart';
+import 'package:humsukhan/domain/speech/speech_failure.dart';
 import 'package:humsukhan/domain/speech/speech_install_port.dart';
 import 'package:humsukhan/features/professional/live_session_view.dart';
 import 'package:humsukhan/features/professional/new_session_sheet.dart';
@@ -88,6 +89,18 @@ class _ProfessionalScreenState extends ConsumerState<ProfessionalScreen> {
     }
   }
 
+  /// Resumes a paused session, reporting a failure rather than sitting still.
+  Future<void> _resumeRecording() async {
+    final Result<Unit, SttFailure> result = await ref
+        .read(recorderProvider.notifier)
+        .recorder
+        .resume();
+    if (!mounted) return;
+    if (result case Err<Unit, SttFailure>(:final SttFailure error)) {
+      _message(ref.read(stringsProvider).describe(error), isError: true);
+    }
+  }
+
   Future<void> _saveRecording() async {
     final SessionRecorder recorder = ref
         .read(recorderProvider.notifier)
@@ -146,6 +159,11 @@ class _ProfessionalScreenState extends ConsumerState<ProfessionalScreen> {
         strings: strings,
         onStop: () =>
             unawaited(ref.read(recorderProvider.notifier).recorder.stop()),
+        onPause: () =>
+            unawaited(ref.read(recorderProvider.notifier).recorder.pause()),
+        onResume: () => unawaited(_resumeRecording()),
+        durationOf: (DateTime now) =>
+            ref.read(recorderProvider.notifier).recorder.durationAt(now),
         onSave: () => unawaited(_saveRecording()),
         onDiscard: () {
           ref.read(recorderProvider.notifier).recorder.discard();

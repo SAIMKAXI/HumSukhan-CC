@@ -16,6 +16,9 @@ class LiveSessionView extends StatefulWidget {
     required this.state,
     required this.strings,
     required this.onStop,
+    required this.onPause,
+    required this.onResume,
+    required this.durationOf,
     required this.onSave,
     required this.onDiscard,
     required this.onAddNote,
@@ -30,6 +33,18 @@ class LiveSessionView extends StatefulWidget {
 
   /// Stops recording.
   final VoidCallback onStop;
+
+  /// Pauses capture, keeping the session open.
+  final VoidCallback onPause;
+
+  /// Resumes a paused session into the same transcript.
+  final VoidCallback onResume;
+
+  /// How long the session has been recording, excluding time spent paused.
+  ///
+  /// Supplied rather than derived from `startedAt` here, because wall-clock
+  /// elapsed would keep climbing through a break the user deliberately took.
+  final Duration Function(DateTime now) durationOf;
 
   /// Saves the finished session.
   final VoidCallback onSave;
@@ -80,7 +95,7 @@ class _LiveSessionViewState extends State<LiveSessionView> {
     final ThemeData theme = Theme.of(context);
     final AppStrings strings = widget.strings;
     final ProfessionalSession? session = widget.state.session;
-    final bool recording = widget.state.isRecording;
+    final bool active = widget.state.isActive;
     final bool stopped = widget.state.phase == RecorderPhase.stopped;
 
     return Scaffold(
@@ -92,7 +107,7 @@ class _LiveSessionViewState extends State<LiveSessionView> {
               child: Padding(
                 padding: const EdgeInsets.only(right: AppTokens.spaceMd),
                 child: Text(
-                  _formatDuration(session.durationAt(_now)),
+                  _formatDuration(widget.durationOf(_now)),
                   style: theme.textTheme.titleMedium,
                 ),
               ),
@@ -133,7 +148,9 @@ class _LiveSessionViewState extends State<LiveSessionView> {
                     },
                   ),
           ),
-          if (recording)
+          // Available while paused too: jotting a line during a break is
+          // exactly when somebody would want to.
+          if (active)
             Padding(
               padding: const EdgeInsets.all(AppTokens.spaceMd),
               child: Row(
@@ -163,7 +180,31 @@ class _LiveSessionViewState extends State<LiveSessionView> {
             padding: const EdgeInsets.all(AppTokens.spaceMd),
             child: Row(
               children: <Widget>[
-                if (recording)
+                if (active) ...<Widget>[
+                  // Offered only in the phases that can honour it, so the
+                  // button is never present and inert.
+                  if (widget.state.canPause || widget.state.canResume)
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: widget.state.canResume
+                            ? widget.onResume
+                            : widget.onPause,
+                        icon: Icon(
+                          widget.state.canResume
+                              ? Icons.play_arrow
+                              : Icons.pause,
+                        ),
+                        label: Text(
+                          strings(
+                            widget.state.canResume
+                                ? StringKey.proResume
+                                : StringKey.proPause,
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (widget.state.canPause || widget.state.canResume)
+                    const SizedBox(width: AppTokens.spaceMd),
                   Expanded(
                     child: FilledButton.icon(
                       onPressed: widget.onStop,
@@ -171,7 +212,8 @@ class _LiveSessionViewState extends State<LiveSessionView> {
                       label: Text(strings(StringKey.proStopRecording)),
                     ),
                   ),
-                if (!recording) ...<Widget>[
+                ],
+                if (!active) ...<Widget>[
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: widget.onDiscard,
@@ -224,6 +266,19 @@ class _StatusBanner extends StatelessWidget {
         AppTokens.warning,
         Colors.black,
         strings(StringKey.everydayStatusReconnecting),
+      ),
+      // Not red. Paused is a state the user chose, and colouring it like a
+      // failure would read as one — the more so for a reader who cannot hear
+      // that nothing is wrong.
+      RecorderPhase.paused => (
+        theme.colorScheme.secondaryContainer,
+        theme.colorScheme.onSecondaryContainer,
+        strings(StringKey.proPaused),
+      ),
+      RecorderPhase.resuming => (
+        theme.colorScheme.secondaryContainer,
+        theme.colorScheme.onSecondaryContainer,
+        strings(StringKey.proResuming),
       ),
       RecorderPhase.failed => (
         theme.colorScheme.errorContainer,

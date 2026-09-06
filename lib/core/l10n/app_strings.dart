@@ -394,6 +394,18 @@ enum StringKey {
   /// `Recording`
   proRecording,
 
+  /// `Pause`
+  proPause,
+
+  /// `Resume`
+  proResume,
+
+  /// `Paused`
+  proPaused,
+
+  /// `Starting again…`
+  proResuming,
+
   /// `Transcript`
   proTranscript,
 
@@ -919,6 +931,10 @@ const Map<StringKey, String> _english = <StringKey, String>{
   StringKey.proStartRecording: 'Start recording',
   StringKey.proStopRecording: 'Stop recording',
   StringKey.proRecording: 'Recording',
+  StringKey.proPause: 'Pause',
+  StringKey.proResume: 'Resume',
+  StringKey.proPaused: 'Paused',
+  StringKey.proResuming: 'Starting again…',
   StringKey.proTranscript: 'Transcript',
   StringKey.proSummary: 'Summary',
   StringKey.proActions: 'Actions',
@@ -1195,6 +1211,10 @@ const Map<StringKey, String> _urdu = <StringKey, String>{
   StringKey.proStartRecording: 'ریکارڈنگ شروع کریں',
   StringKey.proStopRecording: 'ریکارڈنگ بند کریں',
   StringKey.proRecording: 'ریکارڈ ہو رہا ہے',
+  StringKey.proPause: 'وقفہ',
+  StringKey.proResume: 'دوبارہ شروع کریں',
+  StringKey.proPaused: 'وقفے میں',
+  StringKey.proResuming: 'دوبارہ شروع ہو رہا ہے…',
   StringKey.proTranscript: 'تحریر',
   StringKey.proSummary: 'خلاصہ',
   StringKey.proActions: 'اقدامات',
