@@ -9,6 +9,7 @@ import 'package:humsukhan/core/l10n/app_strings.dart';
 import 'package:humsukhan/core/theme/app_tokens.dart';
 import 'package:humsukhan/domain/account/account.dart';
 import 'package:humsukhan/domain/conversation/turn_policy.dart';
+import 'package:humsukhan/core/env/app_version.dart';
 import 'package:humsukhan/core/failure/failure.dart';
 import 'package:humsukhan/domain/environment/model_state.dart';
 import 'package:humsukhan/domain/speech/capability.dart';
@@ -254,7 +255,7 @@ class SettingsScreen extends ConsumerWidget {
           Center(
             child: Text(
               strings.format(StringKey.setVersion, <String, String>{
-                'version': '1.0.0',
+                'version': AppVersion.current,
               }),
               style: theme.textTheme.bodySmall,
             ),
