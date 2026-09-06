@@ -16,6 +16,7 @@ import 'package:humsukhan/domain/speech/capability.dart';
 import 'package:humsukhan/domain/professional/retention_policy.dart';
 import 'package:humsukhan/domain/settings/app_settings.dart';
 import 'package:humsukhan/domain/speech/language_tag.dart';
+import 'package:humsukhan/domain/speech/speech_install_port.dart';
 import 'package:humsukhan/features/shared/mixed_script_text.dart';
 import 'package:humsukhan/features/shared/state_views.dart';
 
@@ -420,15 +421,33 @@ class _VoiceAvailability extends ConsumerWidget {
                 ),
                 _ => (Icons.volume_off_outlined, StringKey.setVoiceMissing),
               };
+              final bool missing = entry.value is CapabilityUnavailable;
               return ListTile(
                 leading: Icon(icon),
                 title: Text(
                   strings.format(key, <String, String>{'language': language}),
                 ),
-                subtitle: entry.value is CapabilityUnavailable
+                subtitle: missing
                     ? Text(
                         strings.failureRemedy(FailureCode.ttsVoiceMissing) ??
                             '',
+                      )
+                    : null,
+                // The same guided download the speak button offers, reachable
+                // before anything has gone wrong. Without it the only way to
+                // fix a missing voice is to run into it mid-conversation.
+                trailing: missing
+                    ? TextButton(
+                        onPressed: () => unawaited(
+                          ref
+                              .read(speechSetupProvider.notifier)
+                              .controller
+                              .ensure(
+                                facility: SpeechFacility.synthesis,
+                                language: entry.key,
+                              ),
+                        ),
+                        child: Text(strings(StringKey.setupDownload)),
                       )
                     : null,
               );

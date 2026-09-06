@@ -31,6 +31,13 @@ Splash → sign up (no email verification required) → onboarding (5 screens,
 skippable forward/back) → Home. Microphone permission is requested **when first
 needed**, not at launch, and the prompt is preceded by why it's needed.
 
+A build with no Supabase configuration signs the user in to a **device
+account** instead of showing a sign-in screen no password can pass. There is no
+password and no sign-out, because there is nothing remote to protect and
+nowhere to sign out to; the account exists so the per-user stores keep a stable
+key. Everything that does not need a server — captions, the speak button,
+environmental alerts — works exactly as it does otherwise.
+
 ### 2.2 Everyday conversation
 1. Home → Everyday → **Start conversation**.
 2. Tap the mic when the other person begins.
@@ -46,8 +53,13 @@ re-tapping between sentences.
 
 ### 2.3 Professional session
 Create session (meeting/lecture/class, language, retention) → record → interim
-text stays hidden, only finalised captions enter the transcript → stop → save →
+text stays hidden, only finalised captions enter the transcript → **pause** for
+a break and **resume** into the same transcript → stop → save →
 Summary/Actions generated from the **complete** transcript → export/share.
+
+Pausing releases the microphone and keeps the session open. Time spent paused
+is not counted as recorded time: reporting a forty-five minute lecture that was
+recorded for fifteen is wrong in a way the user cannot detect.
 
 Sessions auto-expire per retention (max 15 days) with the countdown visible.
 
@@ -55,6 +67,36 @@ Sessions auto-expire per retention (max 15 days) with the countdown visible.
 Enable monitoring (needs mic + the on-device sound model) → detected events
 raise haptic + visual + optional torch/screen flash → history is reviewable.
 Audio is classified on-device and never uploaded.
+
+### 2.5 Speech, and a language the phone does not have
+
+Recognition and synthesis run **on the device first**. Nothing is configured,
+no account is required, and a conversation on a train works. The server
+recogniser is a fallback for a device that has no model for the user's language
+and no way to fetch one; where it is not configured it is simply absent.
+
+When a language is missing, the user is never sent to system settings. The flow
+is one sentence and one button:
+
+```
+feature → capability probe → missing → explain → Download → device installs
+       → verify with the engine → carry on with what they were doing
+```
+
+The action they were attempting is held and replayed, so "what happens after it
+installs?" is never "find the button again". Two platform routes sit behind
+that single button: recognition downloads in-app on Android 13+, with real
+progress on 14+; a voice goes through the engine's own installer, because no
+in-process API exists for it, and the app re-checks on resume. Nothing trusts
+the platform's word for success — Android reports a model downloaded before the
+recogniser will admit to having it, so only the engine's own answer completes
+the flow.
+
+Where a device offers no guided install at all, the app says so plainly rather
+than showing a button that opens nothing.
+
+A missing voice is also actionable from Settings, so it can be fixed before it
+is needed rather than only by running into it mid-conversation.
 
 ---
 

@@ -8,8 +8,11 @@ people, in English and Urdu.
 | Pillar | What it does |
 |---|---|
 | **Everyday** | Live captions of the person speaking to you, and spoken replies |
-| **Professional** | A complete meeting or lecture transcript, then a summary with action items |
+| **Professional** | A complete meeting or lecture transcript — pause for the break, resume into the same one — then a summary with action items |
 | **Environmental** | On-device detection of nine safety-relevant sounds, with haptic and visual alerts |
+
+Speech runs on the device. Install it and it works — no account, no key, no
+signal, and nothing to configure.
 
 The design constraint that shapes everything: **the user may not be able to
 hear failures.** Any state communicated only by sound does not exist. Every
@@ -25,7 +28,8 @@ describing it.
 core/          tokens, themes, Result/Failure, both languages
 domain/        entities and ports — no Flutter, no plugins, no I/O
 application/   session state machines and use cases
-infrastructure/ adapters: Deepgram, platform TTS, sherpa-onnx, Supabase, storage
+infrastructure/ adapters: device recogniser, platform TTS, language installs,
+               sherpa-onnx, Deepgram, Supabase, storage
 features/      one folder per screen, plus the shared design system
 composition/   the only place that knows both a port and its adapter
 ```
@@ -41,18 +45,44 @@ one tries.
 
 ```bash
 flutter pub get
+flutter run
+```
+
+That is the whole of it. Recognition and speech run on the device, so captions,
+the speak button and environmental alerts work on a stock install with nothing
+configured — no account, no key, no signal.
+
+A backend adds three things and nothing else: accounts that follow the user
+between phones, AI summaries of a session, and a fallback recogniser for a
+device that has no model for the user's language and no way to fetch one.
+
+```bash
 flutter run \
   --dart-define=SUPABASE_URL=https://<ref>.supabase.co \
   --dart-define=SUPABASE_ANON_KEY=<publishable key>
 ```
 
-Without those defines the app still builds and runs; recognition and summaries
-report that they cannot reach a server, with a remedy, instead of appearing to
-work. See [`supabase/README.md`](supabase/README.md) for the backend.
+Without those defines the app signs the user in to a device account rather than
+showing a sign-in screen no password can pass, and the features that genuinely
+need a server say so with a remedy instead of appearing to work. See
+[`supabase/README.md`](supabase/README.md) for the backend.
 
 **No third-party API key ever reaches the device.** Provider credentials live
 in Edge Functions, which return either a 60-second recognition token or a
 finished result.
+
+## A language the phone does not have
+
+The app never tells anyone to open system settings and find a speech engine.
+It detects the gap, explains it in one sentence, and offers one button; the
+device does the download, the app verifies it against the engine itself, and
+then carries on with whatever the user was trying to do. On Android 13+ a
+recognition model downloads in the app, with real progress on 14+; a voice goes
+through the engine's own installer, because the platform provides no
+in-process API for it, and the app re-checks on resume.
+
+Where a device offers no guided install, that is said plainly rather than
+rendered as a button that opens nothing.
 
 ## Checks
 

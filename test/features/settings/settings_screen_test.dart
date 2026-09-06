@@ -260,4 +260,33 @@ void main() {
       expect(find.textContaining('Version 1.0.0'), findsOneWidget);
     });
   });
+
+  testWidgets('a missing voice can be fixed from Settings, not only by luck', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      harness(
+        child: const SettingsScreen(),
+        capability: FakeCapabilityPort(
+          ttsAnswers: <LanguageTag, Capability>{
+            LanguageTag.urdu: const CapabilityUnavailable(
+              FailureCode.ttsVoiceMissing,
+            ),
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final Finder download = find.widgetWithText(
+      TextButton,
+      english(StringKey.setupDownload),
+    );
+    await tester.scrollUntilVisible(download, 200);
+    await tester.pumpAndSettle();
+
+    // Without this the only route to a missing voice is running into it
+    // mid-conversation, which is the worst moment to discover it.
+    expect(download, findsOneWidget);
+  });
 }
