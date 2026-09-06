@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:humsukhan/infrastructure/speech/platform_speech_installer.dart';
 
 /// Manifest configuration is reviewed code.
 ///
@@ -53,13 +54,37 @@ void main() {
       );
     });
 
-    test('both queries sit inside a <queries> block', () {
+    test('the voice installer is queryable', () {
+      expect(
+        manifest,
+        contains(
+          '<action android:name="android.speech.tts.engine.INSTALL_TTS_DATA"/>',
+        ),
+        reason:
+            'the guided install resolves this before offering the button; '
+            'undeclared, a phone that can install a voice looks like one that '
+            'cannot',
+      );
+    });
+
+    test('the recognition intent is queryable', () {
+      expect(
+        manifest,
+        contains(
+          '<action android:name="android.speech.action.RECOGNIZE_SPEECH"/>',
+        ),
+      );
+    });
+
+    test('every query sits inside the <queries> block', () {
       final int start = manifest.indexOf('<queries>');
       final int end = manifest.indexOf('</queries>');
       expect(start, greaterThan(0));
       final String queries = manifest.substring(start, end);
       expect(queries, contains('TTS_SERVICE'));
       expect(queries, contains('android.speech.RecognitionService'));
+      expect(queries, contains('INSTALL_TTS_DATA'));
+      expect(queries, contains('RECOGNIZE_SPEECH'));
     });
   });
 
@@ -89,6 +114,52 @@ void main() {
         ).existsSync(),
         isTrue,
       );
+    });
+  });
+
+  group('the language installer is wired to the platform', () {
+    final File plugin = File(
+      'android/app/src/main/kotlin/pk/humsukhan/humsukhan/'
+      'SpeechInstallPlugin.kt',
+    );
+
+    test('the plugin class exists', () {
+      expect(plugin.existsSync(), isTrue);
+    });
+
+    test('MainActivity registers both channels', () {
+      final String activity = File(
+        'android/app/src/main/kotlin/pk/humsukhan/humsukhan/MainActivity.kt',
+      ).readAsStringSync();
+
+      // A channel the Dart side calls and the platform never registers fails
+      // as MissingPluginException — which the installer reports as "no guided
+      // install", silently turning a working phone into an unsupported one.
+      expect(activity, contains('SpeechInstallPlugin.METHOD_CHANNEL'));
+      expect(activity, contains('SpeechInstallPlugin.EVENT_CHANNEL'));
+    });
+
+    test('the channel names match the ones Dart calls', () {
+      final String kotlin = plugin.readAsStringSync();
+
+      expect(
+        kotlin,
+        contains('"${PlatformSpeechInstaller.methodChannelName}"'),
+      );
+      expect(kotlin, contains('"${PlatformSpeechInstaller.eventChannelName}"'));
+    });
+
+    test('the API 34 listener is reached only behind a version check', () {
+      final String kotlin = plugin.readAsStringSync();
+
+      // ModelDownloadListener does not exist before API 34. Building it inside
+      // a method older devices load is how a branch that never runs still
+      // fails verification.
+      expect(kotlin, contains('private object ProgressDownload'));
+      final int guard = kotlin.indexOf('UPSIDE_DOWN_CAKE');
+      final int use = kotlin.indexOf('ProgressDownload.start');
+      expect(guard, greaterThan(0));
+      expect(use, greaterThan(guard));
     });
   });
 
