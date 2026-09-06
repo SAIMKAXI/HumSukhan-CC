@@ -1,0 +1,84 @@
+# Gates every pull request.
+#
+# `main` is protected and nothing reaches it except through this. The broken
+# launcher icon that failed every release build was pushed straight to main;
+# these four checks are what make that impossible now.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: '3.47.2'
+
+jobs:
+  verify:
+    name: Format, analyze, test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Check formatting
+        run: dart format --set-exit-if-changed lib test integration_test tool
+
+      - name: Analyze
+        # --fatal-infos: an info the analyzer reports is a defect nobody has
+        # looked at yet.
+        run: flutter analyze --fatal-infos
+
+      - name: Test
+        run: flutter test --coverage
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/lcov.info
+          if-no-files-found: error
+
+  android:
+    name: Android debug build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Build debug APK
+        # Builds without secrets: the app must compile and start whether or not
+        # a backend is configured, and report the missing backend in words if
+        # it is not.
+        run: flutter build apk --debug
+
+      - name: Check the APK exists and is not empty
+        run: |
+          apk=build/app/outputs/flutter-apk/app-debug.apk
+          test -s "$apk" || { echo "::error::$apk is missing or empty"; exit 1; }
+          echo "built $(du -h "$apk" | cut -f1)"
