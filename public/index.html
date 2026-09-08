@@ -1,62 +1,411 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HumSukhan - Accessibility Communication</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        
-        .container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 60px;
-            max-width: 600px;
-            text-align: center;
-        }
-        
-        h1 {
-            color: #667eea;
-            margin-bottom: 20px;
-            font-size: 2.5em;
-        }
-        
-        p {
-            color: #666;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-        }
-        
-        .loading {
-            margin-top: 30px;
-            color: #999;
-            font-size: 0.9em;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HumSukhan — Accessibility-First AI Communication Companion</title>
+  <meta name="description" content="HumSukhan is an accessibility-first AI companion that helps Deaf and Hard-of-Hearing users communicate, learn, work, and stay aware of important sounds.">
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>HumSukhan</h1>
-        <p>Accessibility Communication Platform</p>
-        <p>Website content is being uploaded...</p>
-        <div class="loading">⏳ Setting up for Vercel deployment</div>
+
+  <!-- ============ NAVIGATION ============ -->
+  <nav class="nav" id="nav">
+    <div class="nav__inner container">
+      <a href="#home" class="nav__brand">
+        <img src="assets/logo.png" alt="HumSukhan" class="nav__logo">
+        <span class="nav__name">HumSukhan</span>
+      </a>
+      <div class="nav__links" id="navLinks">
+        <a href="#home" class="nav__link">Home</a>
+        <a href="#features" class="nav__link">Features</a>
+        <a href="#how" class="nav__link">How It Works</a>
+        <a href="#demo" class="nav__link">Demo</a>
+        <a href="#technology" class="nav__link">Technology</a>
+      </div>
+      <a href="assets/HumSukhan-2.4.3.apk" class="btn btn--primary nav__cta" download>Download APK</a>
+      <button class="nav__hamburger" id="hamburger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
     </div>
+  </nav>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="home">
+    <div class="hero__inner container">
+      <div class="hero__content">
+        <div class="hero__badge reveal reveal--up">
+          <span class="badge__dot"></span>
+          Android APK
+        </div>
+        <h1 class="hero__title reveal reveal--up">Communication Should Never Depend on Hearing Alone.</h1>
+        <p class="hero__subtitle reveal reveal--up">HumSukhan is an accessibility-first AI companion that helps Deaf and Hard-of-Hearing users communicate, learn, work, and stay aware of important sounds.</p>
+        <div class="hero__actions reveal reveal--up">
+          <a href="assets/HumSukhan-2.4.3.apk" class="btn btn--primary btn--lg" download>Download HumSukhan</a>
+          <a href="#demo" class="btn btn--outline btn--lg">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Watch Demo
+          </a>
+        </div>
+      </div>
+      <div class="hero__visual reveal reveal--scale">
+        <div class="hero__phone-frame hero__phone-frame--video">
+          <div class="hero__phone-body">
+            <div class="hero__phone-notch" aria-hidden="true"></div>
+            <div class="hero__phone-screen">
+              <video
+                id="heroVideo"
+                class="hero__video"
+                autoplay
+                muted
+                loop
+                playsinline
+                preload="metadata"
+              >
+                <source src="assets/humsukhan_video.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+            </div>
+            <div class="hero__phone-home" aria-hidden="true"></div>
+          </div>
+          <button class="hero__mute-btn" id="heroMuteBtn" aria-label="Unmute video" type="button">
+            <svg class="hero__mute-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <line x1="23" y1="9" x2="17" y2="15"/>
+              <line x1="17" y1="9" x2="23" y2="15"/>
+            </svg>
+            <span>Unmute</span>
+          </button>
+        </div>
+        <div class="hero__float hero__float--1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          Live Captions
+        </div>
+        <div class="hero__float hero__float--2">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Sound Alert
+        </div>
+        <div class="hero__float hero__float--3">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          AI Insights
+        </div>
+      </div>
+    </div>
+    <div class="hero__bg-shape"></div>
+  </section>
+
+  <!-- ============ FEATURES ============ -->
+  <section class="section features" id="features">
+    <div class="container">
+      <div class="section__header reveal reveal--up reveal--header">
+        <span class="section__label">Features</span>
+        <h2 class="section__title">Everything You Need, Built In.</h2>
+      </div>
+      <div class="cards-grid cards-grid--4 reveal--group">
+        <div class="feature-card reveal reveal--up">
+          <div class="feature-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </div>
+          <h4 class="feature-card__title">Live Captions</h4>
+          <p class="feature-card__text">Real-time speech converted into readable text.</p>
+        </div>
+        <div class="feature-card reveal reveal--up">
+          <div class="feature-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </div>
+          <h4 class="feature-card__title">English + Urdu</h4>
+          <p class="feature-card__text">Support for English, Urdu Script and Roman Urdu.</p>
+        </div>
+        <div class="feature-card reveal reveal--up">
+          <div class="feature-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <h4 class="feature-card__title">Quick Replies</h4>
+          <p class="feature-card__text">Fast responses during real conversations.</p>
+        </div>
+        <div class="feature-card reveal reveal--up">
+          <div class="feature-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+          </div>
+          <h4 class="feature-card__title">Text-to-Speech</h4>
+          <p class="feature-card__text">Turn typed responses into spoken communication.</p>
+        </div>
+        <div class="feature-card reveal reveal--up">
+          <div class="feature-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </div>
+          <h4 class="feature-card__title">Professional Sessions</h4>
+          <p class="feature-card__text">Keep useful lecture and meeting records.</p>
+        </div>
+        <div class="feature-card reveal reveal--up">
+          <div class="feature-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          </div>
+          <h4 class="feature-card__title">AI Insights</h4>
+          <p class="feature-card__text">Summaries, vocabulary, themes, action items and deadlines.</p>
+        </div>
+        <div class="feature-card reveal reveal--up">
+          <div class="feature-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </div>
+          <h4 class="feature-card__title">Environmental Alerts</h4>
+          <p class="feature-card__text">Recognize important sounds and notify users visually and through vibration.</p>
+        </div>
+        <div class="feature-card reveal reveal--up">
+          <div class="feature-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h4 class="feature-card__title">Privacy First</h4>
+          <p class="feature-card__text">No unnecessary raw audio persistence, with user-controlled retention and deletion.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <section class="section how" id="how">
+    <div class="container">
+      <div class="section__header reveal reveal--up reveal--header">
+        <span class="section__label">How It Works</span>
+        <h2 class="section__title">Simple. Seamless. Accessible.</h2>
+      </div>
+      <div class="how__steps reveal--group">
+        <div class="step reveal reveal--up">
+          <div class="step__num">1</div>
+          <h4 class="step__title">Speak</h4>
+          <p class="step__text">Someone speaks near the user.</p>
+        </div>
+        <div class="step-arrow reveal reveal--up">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#556B5B" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div class="step reveal reveal--up">
+          <div class="step__num">2</div>
+          <h4 class="step__title">HumSukhan Listens</h4>
+          <p class="step__text">The app processes audio in real time.</p>
+        </div>
+        <div class="step-arrow reveal reveal--up">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#556B5B" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div class="step reveal reveal--up">
+          <div class="step__num">3</div>
+          <h4 class="step__title">Speech to Text</h4>
+          <p class="step__text">Speech is converted to readable captions.</p>
+        </div>
+        <div class="step-arrow reveal reveal--up">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#556B5B" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div class="step reveal reveal--up">
+          <div class="step__num">4</div>
+          <h4 class="step__title">Captions & Response</h4>
+          <p class="step__text">User reads captions and responds with text or TTS.</p>
+        </div>
+        <div class="step-arrow reveal reveal--up">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#556B5B" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div class="step reveal reveal--up">
+          <div class="step__num">5</div>
+          <h4 class="step__title">Insights & Alerts</h4>
+          <p class="step__text">Sessions become structured insights; sounds become alerts.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DEMO VIDEO ============ -->
+  <section class="section demo" id="demo">
+    <div class="container">
+      <div class="section__header reveal reveal--up reveal--header">
+        <span class="section__label">Demo</span>
+        <h2 class="section__title">See HumSukhan in Action</h2>
+      </div>
+      <div class="demo__layout">
+        <div class="demo__player reveal reveal--up reveal--demo">
+          <div class="demo__frame">
+            <video
+              id="demoVideo"
+              class="demo__video"
+              controls
+              muted
+              preload="metadata"
+              playsinline
+            >
+              <source src="assets/humsukhan_demo.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <div class="demo__overlay" id="demoOverlay">
+              <button class="demo__play-btn" id="demoPlayBtn" aria-label="Play demo video">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+            </div>
+            <button class="demo__mute-btn" id="demoMuteBtn" aria-label="Unmute video" type="button">
+              <svg class="demo__mute-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <line x1="23" y1="9" x2="17" y2="15"/>
+                <line x1="17" y1="9" x2="23" y2="15"/>
+              </svg>
+              <span>Unmute</span>
+            </button>
+          </div>
+        </div>
+        <div class="demo__content reveal reveal--up">
+          <p class="demo__caption">From live captions to professional insights and environmental alerts — this is HumSukhan working in the real world.</p>
+          <div class="demo__actions">
+            <a href="#demo" class="btn btn--outline btn--lg" id="watchFullBtn">Watch Full Demo</a>
+            <a href="assets/HumSukhan-2.4.3.apk" class="btn btn--primary btn--lg" download>Download APK</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TECHNOLOGY ============ -->
+  <section class="section tech" id="technology">
+    <div class="container">
+      <div class="section__header reveal reveal--up reveal--header">
+        <span class="section__label">Architecture</span>
+        <h2 class="section__title">Hybrid AI. Offline When Possible. Cloud When Useful.</h2>
+      </div>
+      <div class="tech__layout reveal--group">
+        <div class="tech__cards">
+          <div class="tech-card tech-card--offset-0 reveal reveal--up">
+            <div class="tech-card__top">
+              <div class="tech-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg>
+              </div>
+              <span class="tech-card__badge">On Device</span>
+            </div>
+            <h4 class="tech-card__title">Sherpa-ONNX + ONNX Runtime</h4>
+            <p class="tech-card__text">Offline English / Urdu speech recognition.</p>
+          </div>
+          <div class="tech-card tech-card--offset-1 reveal reveal--up">
+            <div class="tech-card__top">
+              <div class="tech-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+              </div>
+              <span class="tech-card__badge">Online</span>
+            </div>
+            <h4 class="tech-card__title">Deepgram Streaming STT</h4>
+            <p class="tech-card__text">Higher-accuracy cloud speech recognition when connectivity is available.</p>
+          </div>
+          <div class="tech-card tech-card--accent tech-card--offset-2 reveal reveal--up">
+            <div class="tech-card__top">
+              <div class="tech-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+              </div>
+              <span class="tech-card__badge">Intelligence</span>
+            </div>
+            <h4 class="tech-card__title">Gemini 2.5 Flash</h4>
+            <p class="tech-card__text">Summaries, vocabulary, themes and action items.</p>
+          </div>
+          <div class="tech-card tech-card--offset-0 reveal reveal--up">
+            <div class="tech-card__top">
+              <div class="tech-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+              </div>
+              <span class="tech-card__badge">Backend</span>
+            </div>
+            <h4 class="tech-card__title">Supabase</h4>
+            <p class="tech-card__text">Authentication, PostgreSQL, realtime synchronization and edge functions.</p>
+          </div>
+          <div class="tech-card tech-card--offset-1 reveal reveal--up">
+            <div class="tech-card__top">
+              <div class="tech-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M2 8c0-2.2 1.8-4 4-4h12c2.2 0 4 1.8 4 4"/></svg>
+              </div>
+              <span class="tech-card__badge">Environmental Intelligence</span>
+            </div>
+            <h4 class="tech-card__title">On-device Audio Classification</h4>
+            <p class="tech-card__text">Safety-relevant sound detection without relying entirely on the cloud.</p>
+          </div>
+        </div>
+        <div class="tech__image reveal reveal--up">
+          <img src="assets/architecture.png" alt="Layered paper-cutout AI architecture illustration">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ACCESSIBILITY & PRIVACY ============ -->
+  <section class="section a11y" id="accessibility">
+    <div class="container">
+      <div class="section__header reveal reveal--up reveal--header">
+        <span class="section__label">Trust & Access</span>
+        <h2 class="section__title">Built for Accessibility. Built With Trust.</h2>
+      </div>
+      <div class="a11y__panels reveal--group">
+        <div class="a11y__panel reveal reveal--up">
+          <h3 class="a11y__panel-title">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#556B5B" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+            Accessibility
+          </h3>
+          <ul class="a11y__list">
+            <li><span class="check">✓</span> High-contrast UI</li>
+            <li><span class="check">✓</span> Dark theme</li>
+            <li><span class="check">✓</span> Large readable captions</li>
+            <li><span class="check">✓</span> Visual + haptic alerts</li>
+            <li><span class="check">✓</span> Flashlight alerts</li>
+            <li><span class="check">✓</span> English / Urdu support</li>
+            <li><span class="check">✓</span> User-controlled interactions</li>
+          </ul>
+        </div>
+        <div class="a11y__panel a11y__panel--privacy reveal reveal--up">
+          <h3 class="a11y__panel-title">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            Privacy
+          </h3>
+          <ul class="a11y__list">
+            <li><span class="check">✓</span> User-controlled retention</li>
+            <li><span class="check">✓</span> Explicit deletion</li>
+            <li><span class="check">✓</span> No unnecessary raw audio persistence</li>
+            <li><span class="check">✓</span> Secure authentication</li>
+            <li><span class="check">✓</span> Server-side data isolation</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FINAL CTA ============ -->
+  <section class="section final-cta" id="download">
+    <div class="container">
+      <div class="final-cta__inner reveal reveal--scale">
+        <h2 class="final-cta__title">Make Communication More Accessible.</h2>
+        <p class="final-cta__text">HumSukhan brings communication, professional listening and environmental awareness into one accessibility-first experience.</p>
+        <div class="final-cta__actions">
+          <a href="assets/HumSukhan-2.4.3.apk" class="btn btn--primary btn--lg" download>Download HumSukhan</a>
+          <a href="#demo" class="btn btn--outline btn--lg btn--light">Watch Demo</a>
+        </div>
+      </div>
+    </div>
+    <div class="final-cta__bg"></div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__inner">
+        <div class="footer__brand">
+          <img src="assets/logo.png" alt="HumSukhan" class="footer__logo">
+          <div>
+            <span class="footer__name">HumSukhan</span>
+            <span class="footer__tagline">Accessibility-first AI communication companion</span>
+          </div>
+        </div>
+        <div class="footer__links">
+          <a href="#home">Home</a>
+          <a href="#features">Features</a>
+          <a href="#technology">Technology</a>
+          <a href="#demo">Demo</a>
+          <a href="#download">Download</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
 </body>
 </html>
