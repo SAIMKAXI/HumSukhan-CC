@@ -1,8 +1,5 @@
 /* ===== HumSukhan Landing — Interactions ===== */
 
-/* --- Config: demo video URL --- */
-const DEMO_VIDEO_URL = ''; // e.g. 'assets/humsukhan_video.mp4'
-
 document.addEventListener('DOMContentLoaded', () => {
   initNav();
   initScrollAnimations();
@@ -20,13 +17,21 @@ function initNav() {
   // Scroll effect
   window.addEventListener('scroll', () => {
     nav.classList.toggle('nav--scrolled', window.scrollY > 20);
-  });
+  }, { passive: true });
 
   // Mobile menu
+  function closeMobileMenu() {
+    navLinks.classList.remove('nav__links--open');
+    hamburger.setAttribute('aria-expanded', 'false');
+    const spans = hamburger.querySelectorAll('span');
+    spans[0].style.transform = '';
+    spans[1].style.opacity = '';
+    spans[2].style.transform = '';
+  }
+
   hamburger.addEventListener('click', () => {
-    navLinks.classList.toggle('nav__links--open');
-    const open = navLinks.classList.contains('nav__links--open');
-    hamburger.setAttribute('aria-expanded', open);
+    const open = navLinks.classList.toggle('nav__links--open');
+    hamburger.setAttribute('aria-expanded', String(open));
     // Animate hamburger
     const spans = hamburger.querySelectorAll('span');
     if (open) {
@@ -42,13 +47,7 @@ function initNav() {
 
   // Close mobile menu on link click
   navLinks.querySelectorAll('.nav__link').forEach(link => {
-    link.addEventListener('click', () => {
-      navLinks.classList.remove('nav__links--open');
-      const spans = hamburger.querySelectorAll('span');
-      spans[0].style.transform = '';
-      spans[1].style.opacity = '';
-      spans[2].style.transform = '';
-    });
+    link.addEventListener('click', closeMobileMenu);
   });
 
   // Active link tracking
@@ -117,33 +116,28 @@ function initScrollAnimations() {
   });
 }
 
-/* ===== Hero Video ===== */
-function initHeroVideo() {
-  const video = document.getElementById('heroVideo');
-  const muteBtn = document.getElementById('heroMuteBtn');
-  if (!video || !muteBtn) return;
+/* ===== Shared mute-button toggle (hero + demo video) ===== */
+const MUTE_ICON = `
+  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+  <line x1="23" y1="9" x2="17" y2="15"/>
+  <line x1="17" y1="9" x2="23" y2="15"/>
+`;
+const UNMUTE_ICON = `
+  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+`;
 
-  const muteIcon = muteBtn.querySelector('.hero__mute-icon');
+function setupMuteToggle(video, muteBtn, iconSelector) {
+  if (!video || !muteBtn) return;
+  const muteIcon = muteBtn.querySelector(iconSelector);
   const muteLabel = muteBtn.querySelector('span');
 
   function updateMuteButton() {
-    if (video.muted) {
-      muteLabel.textContent = 'Unmute';
-      muteBtn.setAttribute('aria-label', 'Unmute video');
-      muteIcon.innerHTML = `
-        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-        <line x1="23" y1="9" x2="17" y2="15"/>
-        <line x1="17" y1="9" x2="23" y2="15"/>
-      `;
-    } else {
-      muteLabel.textContent = 'Mute';
-      muteBtn.setAttribute('aria-label', 'Mute video');
-      muteIcon.innerHTML = `
-        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-      `;
-    }
+    const label = video.muted ? 'Unmute' : 'Mute';
+    muteLabel.textContent = label;
+    muteBtn.setAttribute('aria-label', `${label} video`);
+    muteIcon.innerHTML = video.muted ? MUTE_ICON : UNMUTE_ICON;
   }
 
   muteBtn.addEventListener('click', () => {
@@ -155,6 +149,13 @@ function initHeroVideo() {
   video.addEventListener('volumechange', updateMuteButton);
 }
 
+/* ===== Hero Video ===== */
+function initHeroVideo() {
+  const video = document.getElementById('heroVideo');
+  const muteBtn = document.getElementById('heroMuteBtn');
+  setupMuteToggle(video, muteBtn, '.hero__mute-icon');
+}
+
 /* ===== Demo Video ===== */
 function initDemoVideo() {
   const video = document.getElementById('demoVideo');
@@ -163,69 +164,35 @@ function initDemoVideo() {
   const muteBtn = document.getElementById('demoMuteBtn');
   if (!video || !overlay || !playBtn) return;
 
-  const source = video.querySelector('source');
-  const hasVideo = source && source.src && source.src !== window.location.href;
-
-  // Set video source from config if provided
-  if (DEMO_VIDEO_URL && source) {
-    source.src = DEMO_VIDEO_URL;
-    video.load();
+  function showUnavailableMessage() {
+    overlay.innerHTML = `
+      <div style="text-align:center;color:white;padding:24px;">
+        <p style="font-size:1.2rem;font-weight:600;margin-bottom:8px;">Demo video coming soon</p>
+        <p style="font-size:.9rem;opacity:.8;">The demo video will be available shortly.</p>
+      </div>
+    `;
   }
 
   // Play button interaction
   playBtn.addEventListener('click', () => {
-    if (hasVideo || DEMO_VIDEO_URL) {
-      overlay.classList.add('demo__overlay--hidden');
-      video.play();
-    } else {
-      // No video configured — show a friendly message
-      overlay.innerHTML = `
-        <div style="text-align:center;color:white;padding:24px;">
-          <p style="font-size:1.2rem;font-weight:600;margin-bottom:8px;">Demo video coming soon</p>
-          <p style="font-size:.9rem;opacity:.8;">The demo video will be available shortly.</p>
-        </div>
-      `;
-      setTimeout(() => {
-        overlay.innerHTML = `<button class="demo__play-btn" aria-label="Play demo video">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        </button>`;
-        overlay.querySelector('.demo__play-btn').addEventListener('click', arguments.callee);
-      }, 3000);
+    overlay.classList.add('demo__overlay--hidden');
+    const playPromise = video.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(() => {
+        // Video missing or failed to load (e.g. asset not yet deployed)
+        overlay.classList.remove('demo__overlay--hidden');
+        showUnavailableMessage();
+      });
     }
   });
 
-  // Unmute toggle
-  if (muteBtn) {
-    const muteIcon = muteBtn.querySelector('.demo__mute-icon');
-    const muteLabel = muteBtn.querySelector('span');
+  // Also handle the case where the <source> itself 404s
+  video.addEventListener('error', () => {
+    overlay.classList.remove('demo__overlay--hidden');
+    showUnavailableMessage();
+  });
 
-    function updateMuteButton() {
-      if (video.muted) {
-        muteLabel.textContent = 'Unmute';
-        muteBtn.setAttribute('aria-label', 'Unmute video');
-        muteIcon.innerHTML = `
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-          <line x1="23" y1="9" x2="17" y2="15"/>
-          <line x1="17" y1="9" x2="23" y2="15"/>
-        `;
-      } else {
-        muteLabel.textContent = 'Mute';
-        muteBtn.setAttribute('aria-label', 'Mute video');
-        muteIcon.innerHTML = `
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-        `;
-      }
-    }
-
-    muteBtn.addEventListener('click', () => {
-      video.muted = !video.muted;
-      updateMuteButton();
-    });
-
-    video.addEventListener('volumechange', updateMuteButton);
-  }
+  setupMuteToggle(video, muteBtn, '.demo__mute-icon');
 
   // Pause overlay restoration
   video.addEventListener('pause', () => {
@@ -242,7 +209,9 @@ function initDemoVideo() {
 function initSmoothScroll() {
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
-      const target = document.querySelector(this.getAttribute('href'));
+      const targetId = this.getAttribute('href');
+      if (targetId.length <= 1) return; // guard against bare "#"
+      const target = document.querySelector(targetId);
       if (target) {
         e.preventDefault();
         const offset = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 72;
@@ -252,14 +221,3 @@ function initSmoothScroll() {
     });
   });
 }
-
-/* ===== Parallax on Hero (subtle) ===== */
-window.addEventListener('scroll', () => {
-  const hero = document.querySelector('.hero__phone-img');
-  if (hero) {
-    const scrolled = window.scrollY;
-    if (scrolled < 800) {
-      hero.style.transform = `translateY(${scrolled * 0.04}px)`;
-    }
-  }
-}, { passive: true });
