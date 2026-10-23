@@ -412,7 +412,7 @@ p { font-size: clamp(1rem, 1.1vw, 1.15rem); color: var(--text-muted); }
 .footer__logo { width: 36px; height: 36px; border-radius: 8px; }
 .footer__name { font-weight: 700; color: var(--white); font-size: 1.1rem; display: block; }
 .footer__tagline { font-size: .82rem; display: block; }
-.footer__links { display: flex; gap: 24px; }
+.footer__links { display: flex; flex-wrap: wrap; gap: 12px 24px; }
 .footer__links a { font-size: .9rem; transition: color .2s; }
 .footer__links a:hover { color: var(--white); }
 
